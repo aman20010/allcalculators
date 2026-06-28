@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Download Time Calculator — CalcHub{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="/">Home</a><span class="sep">/</span><a href="/utility">Utility</a><span class="sep">/</span><span class="current">Download Time</span></div>
+<div class="page-header"><h1>Download Time Calculator</h1><p>Estimate download time for any file size and internet speed</p></div>
+<div class="calc-layout">
+<div class="calc-form">
+    <h2>File & Speed</h2>
+    <div class="field-row">
+        <div class="field"><label for="fsize">File Size</label><input type="number" id="fsize" value="4" step="any"></div>
+        <div class="field"><label for="funit">Unit</label>
+            <select id="funit" style="padding:.55rem .75rem;border:1.5px solid var(--border);border-radius:8px;font-size:.9rem;font-family:inherit;width:100%;">
+                <option value="1">KB</option><option value="1024" selected>MB</option><option value="1048576">GB</option><option value="1073741824">TB</option>
+            </select>
+        </div>
+    </div>
+    <div class="field-row">
+        <div class="field"><label for="speed">Internet Speed</label><input type="number" id="speed" value="100" step="any"></div>
+        <div class="field"><label for="sunit">Unit</label>
+            <select id="sunit" style="padding:.55rem .75rem;border:1.5px solid var(--border);border-radius:8px;font-size:.9rem;font-family:inherit;width:100%;">
+                <option value="0.125">Kbps</option><option value="125" selected>Mbps</option><option value="125000">Gbps</option>
+            </select>
+        </div>
+    </div>
+    <button class="btn btn-primary" onclick="calculate()">Calculate</button>
+</div>
+<div class="calc-results">
+    <h2>Results</h2>
+    <div id="results-placeholder" class="results-placeholder"><div class="icon">⬇️</div><p>Enter file size and speed to estimate time.</p></div>
+    <div id="results" style="display:none;">
+        <div class="result-hero"><div class="label">Estimated Download Time</div><div class="value" id="r-time"></div></div>
+        <div class="result-stats">
+            <div class="stat-card"><div class="label">File Size (MB)</div><div class="value" id="r-size"></div></div>
+            <div class="stat-card blue"><div class="label">Speed (MBps)</div><div class="value" id="r-spd"></div></div>
+        </div>
+    </div>
+</div>
+</div>
+{% endblock %}
+{% block scripts %}<script>
+function fmtTime(s){if(s<60)return s.toFixed(1)+" sec";if(s<3600)return (s/60).toFixed(1)+" min";if(s<86400)return (s/3600).toFixed(2)+" hr";return (s/86400).toFixed(2)+" days";}
+function calculate(){
+    const fs=+document.getElementById("fsize").value, fu=+document.getElementById("funit").value;
+    const sp=+document.getElementById("speed").value, su=+document.getElementById("sunit").value;
+    if(!fs||!sp)return alert("Enter valid file size and speed.");
+    const sizeKB=fs*fu, speedKBps=sp*su, secs=sizeKB/speedKBps;
+    showResults("results");
+    document.getElementById("r-time").textContent=fmtTime(secs);
+    document.getElementById("r-size").textContent=(sizeKB/1024).toFixed(2)+" MB";
+    document.getElementById("r-spd").textContent=(speedKBps/1024).toFixed(2)+" MBps";
+}
+</script>{% endblock %}

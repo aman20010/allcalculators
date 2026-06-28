@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Ratio Calculator — CalcHub{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="/">Home</a><span class="sep">/</span><a href="/utility">Utility</a><span class="sep">/</span><span class="current">Ratio</span></div>
+<div class="page-header"><h1>Ratio Calculator</h1><p>Simplify ratios and find equivalent ratios</p></div>
+<div class="calc-layout">
+<div class="calc-form">
+    <h2>Simplify a Ratio</h2>
+    <div class="field-row">
+        <div class="field"><label for="a">A</label><input type="number" id="a" value="12" step="any"></div>
+        <div style="display:flex;align-items:center;padding-top:1.6rem;font-size:1.2rem;font-weight:700;">∶</div>
+        <div class="field"><label for="b">B</label><input type="number" id="b" value="8" step="any"></div>
+    </div>
+    <button class="btn btn-primary" onclick="simplify()">Simplify</button>
+    <div style="border-top:1px solid var(--border);margin:1.25rem 0;"></div>
+    <h2>Scale a Ratio</h2>
+    <div class="field-row">
+        <div class="field"><label for="sa">A</label><input type="number" id="sa" value="3" step="any"></div>
+        <div style="display:flex;align-items:center;padding-top:1.6rem;font-size:1.2rem;font-weight:700;">∶</div>
+        <div class="field"><label for="sb">B</label><input type="number" id="sb" value="2" step="any"></div>
+    </div>
+    <div class="field"><label for="scale">Scale factor</label><input type="number" id="scale" value="5" step="any"></div>
+    <button class="btn btn-primary" onclick="scaleRatio()">Scale</button>
+</div>
+<div class="calc-results">
+    <h2>Results</h2>
+    <div id="results-placeholder" class="results-placeholder"><div class="icon">∶</div><p>Enter a ratio and click Calculate.</p></div>
+    <div id="results" style="display:none;">
+        <div class="result-hero"><div class="label" id="r-lbl">Simplified</div><div class="value" id="r-ratio"></div></div>
+        <div class="info-box" id="r-info"></div>
+    </div>
+</div>
+</div>
+{% endblock %}
+{% block scripts %}<script>
+function gcd(a,b){a=Math.round(Math.abs(a));b=Math.round(Math.abs(b));while(b){let t=b;b=a%b;a=t;}return a||1;}
+function simplify() {
+    const a=+document.getElementById("a").value, b=+document.getElementById("b").value;
+    if(!a||!b) return alert("Values cannot be 0.");
+    const g=gcd(a,b);
+    showResults("results");
+    document.getElementById("r-lbl").textContent="Simplified Ratio";
+    document.getElementById("r-ratio").textContent=`${a/g} ∶ ${b/g}`;
+    document.getElementById("r-info").innerHTML=`GCD = ${g} &bull; Ratio as fraction = ${a/g}/${b/g} &bull; Decimal = ${(a/b).toPrecision(5)}`;
+}
+function scaleRatio() {
+    const a=+document.getElementById("sa").value, b=+document.getElementById("sb").value, s=+document.getElementById("scale").value;
+    if(!a||!b||!s) return alert("All values must be non-zero.");
+    showResults("results");
+    document.getElementById("r-lbl").textContent=`Scaled by ${s}`;
+    document.getElementById("r-ratio").textContent=`${a*s} ∶ ${b*s}`;
+    document.getElementById("r-info").innerHTML=`Original: ${a} ∶ ${b} &bull; Scaled: ${a*s} ∶ ${b*s}`;
+}
+</script>{% endblock %}

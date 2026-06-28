@@ -116,6 +116,8 @@ async function calculate() {
     document.getElementById("r-yearly").textContent = formatINR(d.yearly_saving_required);
     document.getElementById("r-years-to").textContent = d.years_to_retire;
     document.getElementById("r-years-in").textContent = d.years_in_retirement;
+
+    saveCalcResult('retirement', { corpus_needed: d.corpus_needed, monthly_saving_required: d.monthly_saving_required, years_to_retire: d.years_to_retire, gap: d.gap });
 }
 </script>
 {% endblock %}

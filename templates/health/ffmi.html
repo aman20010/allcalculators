@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block title %}FFMI Calculator — CalcHub{% endblock %}
+{% block content %}
+<div class="breadcrumb">
+    <a href="/">Home</a><span class="sep">/</span><a href="/health">Health</a><span class="sep">/</span><span class="current">FFMI</span>
+</div>
+<div class="page-header">
+    <h1>FFMI Calculator</h1>
+    <p>Fat-Free Mass Index — assess muscle development relative to height</p>
+</div>
+<div class="calc-layout">
+    <div class="calc-form">
+        <h2>Enter Details</h2>
+        <div id="prereq-banner"></div>
+        <div class="field">
+            <label for="weight">Weight <span class="field-value"></span></label>
+            <div class="input-wrap"><input type="number" id="weight" value="75" min="20" max="300" step="0.5"><span class="suffix">kg</span></div>
+            <input type="range" id="weight_r" min="30" max="180" step="0.5" value="75">
+        </div>
+        <div class="field">
+            <label for="height">Height <span class="field-value"></span></label>
+            <div class="input-wrap"><input type="number" id="height" value="175" min="100" max="250"><span class="suffix">cm</span></div>
+            <input type="range" id="height_r" min="100" max="220" step="1" value="175">
+        </div>
+        <div class="field">
+            <label for="bf">Body Fat % <span class="field-value"></span></label>
+            <div class="input-wrap"><input type="number" id="bf" value="15" min="3" max="60" step="0.5"><span class="suffix">%</span></div>
+            <input type="range" id="bf_r" min="3" max="50" step="0.5" value="15">
+        </div>
+        <button class="btn btn-primary" onclick="calculate()">Calculate FFMI</button>
+    </div>
+    <div class="calc-results">
+        <h2>Results</h2>
+        <div id="results-placeholder" class="results-placeholder">
+            <div class="icon">💪</div>
+            <p>Enter your details and click Calculate.</p>
+        </div>
+        <div id="results" style="display:none;">
+            <div class="result-hero">
+                <div class="label">FFMI</div>
+                <div class="value" id="r-ffmi"></div>
+                <div class="sub" id="r-category"></div>
+            </div>
+            <div class="result-stats">
+                <div class="stat-card green"><div class="label">Fat-Free Mass</div><div class="value" id="r-ffm"></div></div>
+                <div class="stat-card orange"><div class="label">Fat Mass</div><div class="value" id="r-fat"></div></div>
+                <div class="stat-card blue"><div class="label">Normalized FFMI</div><div class="value" id="r-norm"></div></div>
+            </div>
+            <div class="info-box">
+                <strong>FFMI Scale:</strong><br>
+                &lt; 18 Below Average &bull; 18–19 Average &bull; 20–21 Above Average &bull; 22–24 Excellent &bull; 25 Near Natural Limit<br>
+                <span style="font-size:.75rem; color:var(--text-muted);">Normalized FFMI adjusts to a 1.8m reference height.</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+syncSlider("weight_r","weight","","kg");
+syncSlider("height_r","height","","cm");
+syncSlider("bf_r","bf","","% BF");
+
+(function prefillFromStorage() {
+    const bf = loadCalcResult('bodyFat');
+    const bmi = loadCalcResult('bmi');
+    document.getElementById('prereq-banner').innerHTML = prereqBannerHTML([
+        { key: 'bodyFat', name: 'Body Fat % Calculator', url: '/health/body-fat' },
+        { key: 'bmi', name: 'BMI Calculator', url: '/health/bmi' },
+    ]);
+    if (bf) {
+        prefillField('bf', bf.body_fat_percent);
+        prefillField('weight', bf.weight_kg);
+        if (bf.height_cm) prefillField('height', bf.height_cm);
+    }
+    if (bmi) {
+        if (!bf) prefillField('weight', bmi.weight_kg);
+        prefillField('height', bmi.height_cm);
+    }
+})();
+
+async function calculate() {
+    const data = {
+        weight_kg: +document.getElementById("weight").value,
+        height_cm: +document.getElementById("height").value,
+        body_fat_percent: +document.getElementById("bf").value,
+    };
+    const res = await postCalc("/health/api/ffmi", data);
+    if (res.status !== "success") return alert(res.message);
+    const d = res.data;
+    showResults("results");
+    document.getElementById("r-ffmi").textContent = d.ffmi;
+    document.getElementById("r-category").textContent = d.category;
+    document.getElementById("r-ffm").textContent = d.fat_free_mass_kg + " kg";
+    document.getElementById("r-fat").textContent = d.fat_mass_kg + " kg";
+    document.getElementById("r-norm").textContent = d.ffmi_normalized;
+    saveCalcResult('ffmi', { ffmi: d.ffmi, ffmi_normalized: d.ffmi_normalized, fat_free_mass_kg: d.fat_free_mass_kg });
+}
+</script>
+{% endblock %}

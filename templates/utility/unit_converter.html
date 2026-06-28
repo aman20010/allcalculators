@@ -1,0 +1,298 @@
+{% extends "base.html" %}
+{% block title %}Unit Converter — CalcHub{% endblock %}
+{% block content %}
+<div class="breadcrumb">
+    <a href="/">Home</a><span class="sep">/</span><a href="/utility">Utility</a><span class="sep">/</span><span class="current">Unit Converter</span>
+</div>
+<div class="page-header">
+    <h1>Unit Converter</h1>
+    <p>Length, weight, temperature, area, volume, speed, pressure, energy, power, fuel economy, data storage, and cooking</p>
+</div>
+
+<div class="calc-form" style="max-width:640px;">
+    <h2>Convert</h2>
+    <div class="field">
+        <label for="category">Category</label>
+        <select id="category" onchange="updateUnits()">
+            <option value="length">Length</option>
+            <option value="weight">Weight</option>
+            <option value="temperature">Temperature</option>
+            <option value="area">Area</option>
+            <option value="volume">Volume</option>
+            <option value="speed">Speed</option>
+            <option value="pressure">Pressure</option>
+            <option value="energy">Energy</option>
+            <option value="power">Power</option>
+            <option value="fuel">Fuel Economy</option>
+            <option value="data">Data Storage</option>
+            <option value="cooking">Cooking</option>
+        </select>
+    </div>
+    <div class="field-row">
+        <div class="field">
+            <label for="from_val">From</label>
+            <input type="number" id="from_val" value="1" step="any" oninput="convert()">
+        </div>
+        <div class="field">
+            <label for="from_unit">Unit</label>
+            <select id="from_unit" onchange="convert()"></select>
+        </div>
+    </div>
+    <div class="field-row">
+        <div class="field">
+            <label for="to_val">To</label>
+            <input type="number" id="to_val" step="any" readonly style="background:var(--surface-alt);">
+        </div>
+        <div class="field">
+            <label for="to_unit">Unit</label>
+            <select id="to_unit" onchange="convert()"></select>
+        </div>
+    </div>
+    <div id="r-formula" class="info-box" style="display:none;"></div>
+</div>
+
+<!-- All-in-one table -->
+<div id="all-table-wrap" style="margin-top:1.5rem; max-width:640px;">
+    <div class="section-label">All conversions</div>
+    <div class="calc-form" style="padding:.5rem;">
+        <table id="all-table" style="width:100%;border-collapse:collapse;font-size:.82rem;">
+            <tbody id="all-tbody"></tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+const UNITS = {
+    length: {
+        label: "Length",
+        base: "m",
+        units: {
+            mm: { label: "Millimetre (mm)", factor: 0.001 },
+            cm: { label: "Centimetre (cm)", factor: 0.01 },
+            m:  { label: "Metre (m)", factor: 1 },
+            km: { label: "Kilometre (km)", factor: 1000 },
+            inch: { label: "Inch (in)", factor: 0.0254 },
+            foot: { label: "Foot (ft)", factor: 0.3048 },
+            yard: { label: "Yard (yd)", factor: 0.9144 },
+            mile: { label: "Mile (mi)", factor: 1609.344 },
+        }
+    },
+    weight: {
+        label: "Weight / Mass",
+        base: "g",
+        units: {
+            mg:  { label: "Milligram (mg)", factor: 0.001 },
+            g:   { label: "Gram (g)", factor: 1 },
+            kg:  { label: "Kilogram (kg)", factor: 1000 },
+            oz:  { label: "Ounce (oz)", factor: 28.3495 },
+            lb:  { label: "Pound (lb)", factor: 453.592 },
+        }
+    },
+    temperature: {
+        label: "Temperature",
+        base: null,
+        units: {
+            C: { label: "Celsius (°C)" },
+            F: { label: "Fahrenheit (°F)" },
+            K: { label: "Kelvin (K)" },
+        }
+    },
+    area: {
+        label: "Area",
+        base: "sqm",
+        units: {
+            sqmm:  { label: "Square mm (mm²)", factor: 1e-6 },
+            sqcm:  { label: "Square cm (cm²)", factor: 1e-4 },
+            sqm:   { label: "Square metre (m²)", factor: 1 },
+            sqkm:  { label: "Square km (km²)", factor: 1e6 },
+            sqft:  { label: "Square foot (ft²)", factor: 0.092903 },
+            sqyd:  { label: "Square yard (yd²)", factor: 0.836127 },
+            acre:  { label: "Acre", factor: 4046.86 },
+            hectare: { label: "Hectare (ha)", factor: 10000 },
+        }
+    },
+    volume: {
+        label: "Volume",
+        base: "l",
+        units: {
+            ml:     { label: "Millilitre (ml)", factor: 0.001 },
+            l:      { label: "Litre (l)", factor: 1 },
+            cum:    { label: "Cubic metre (m³)", factor: 1000 },
+            galUS:  { label: "Gallon US (gal)", factor: 3.78541 },
+            galUK:  { label: "Gallon UK (gal)", factor: 4.54609 },
+            cup:    { label: "Cup (US)", factor: 0.236588 },
+            floz:   { label: "Fluid oz (fl oz)", factor: 0.029574 },
+            tbsp:   { label: "Tablespoon (tbsp)", factor: 0.014787 },
+            tsp:    { label: "Teaspoon (tsp)", factor: 0.004929 },
+        }
+    },
+    speed: {
+        label: "Speed",
+        base: "ms",
+        units: {
+            ms:   { label: "Metre/sec (m/s)", factor: 1 },
+            kmh:  { label: "Kilometre/hr (km/h)", factor: 1/3.6 },
+            mph:  { label: "Mile/hr (mph)", factor: 0.44704 },
+            knot: { label: "Knot", factor: 0.514444 },
+        }
+    },
+    pressure: {
+        label: "Pressure",
+        base: "pa",
+        units: {
+            pa:   { label: "Pascal (Pa)", factor: 1 },
+            kpa:  { label: "Kilopascal (kPa)", factor: 1000 },
+            mpa:  { label: "Megapascal (MPa)", factor: 1e6 },
+            bar:  { label: "Bar", factor: 100000 },
+            atm:  { label: "Atmosphere (atm)", factor: 101325 },
+            psi:  { label: "PSI (lbf/in²)", factor: 6894.76 },
+            torr: { label: "Torr (mmHg)", factor: 133.322 },
+        }
+    },
+    energy: {
+        label: "Energy",
+        base: "j",
+        units: {
+            j:    { label: "Joule (J)", factor: 1 },
+            kj:   { label: "Kilojoule (kJ)", factor: 1000 },
+            cal:  { label: "Calorie (cal)", factor: 4.184 },
+            kcal: { label: "Kilocalorie (kcal)", factor: 4184 },
+            kwh:  { label: "Kilowatt-hour (kWh)", factor: 3600000 },
+            ev:   { label: "Electronvolt (eV)", factor: 1.60218e-19 },
+            btu:  { label: "BTU", factor: 1055.06 },
+        }
+    },
+    power: {
+        label: "Power",
+        base: "w",
+        units: {
+            w:   { label: "Watt (W)", factor: 1 },
+            kw:  { label: "Kilowatt (kW)", factor: 1000 },
+            mw:  { label: "Megawatt (MW)", factor: 1e6 },
+            hp:  { label: "Horsepower (hp)", factor: 745.7 },
+            btu_h: { label: "BTU/hour", factor: 0.29307 },
+        }
+    },
+    fuel: {
+        label: "Fuel Economy",
+        base: null,
+        units: {
+            kml:    { label: "km per litre (km/L)" },
+            l100:   { label: "Litres per 100km (L/100km)" },
+            mpg_us: { label: "Miles per gallon US (mpg)" },
+            mpg_uk: { label: "Miles per gallon UK (mpg)" },
+        }
+    },
+    data: {
+        label: "Data Storage",
+        base: "b",
+        units: {
+            b:   { label: "Byte (B)", factor: 1 },
+            kb:  { label: "Kilobyte (KB)", factor: 1024 },
+            mb:  { label: "Megabyte (MB)", factor: 1048576 },
+            gb:  { label: "Gigabyte (GB)", factor: 1073741824 },
+            tb:  { label: "Terabyte (TB)", factor: 1099511627776 },
+            pb:  { label: "Petabyte (PB)", factor: 1.126e15 },
+            kib: { label: "Kibibyte (KiB)", factor: 1024 },
+            mib: { label: "Mebibyte (MiB)", factor: 1048576 },
+        }
+    },
+    cooking: {
+        label: "Cooking",
+        base: "ml",
+        units: {
+            ml:   { label: "Millilitre (ml)", factor: 1 },
+            tsp:  { label: "Teaspoon (tsp)", factor: 4.92892 },
+            tbsp: { label: "Tablespoon (tbsp)", factor: 14.7868 },
+            cup:  { label: "Cup (US)", factor: 240 },
+            floz: { label: "Fluid oz (fl oz)", factor: 29.5735 },
+            g:    { label: "Gram (g, water)", factor: 1 },
+            oz:   { label: "Ounce (oz)", factor: 28.3495 },
+        }
+    },
+};
+
+function toBase(val, unit, cat) {
+    if (cat === "temperature") {
+        if (unit === "C") return val;
+        if (unit === "F") return (val - 32) * 5/9;
+        if (unit === "K") return val - 273.15;
+    }
+    if (cat === "fuel") {
+        // normalise to km/L
+        if (unit === "kml")    return val;
+        if (unit === "l100")   return val === 0 ? Infinity : 100 / val;
+        if (unit === "mpg_us") return val * 0.425144;
+        if (unit === "mpg_uk") return val * 0.354006;
+    }
+    return val * UNITS[cat].units[unit].factor;
+}
+
+function fromBase(base, unit, cat) {
+    if (cat === "temperature") {
+        if (unit === "C") return base;
+        if (unit === "F") return base * 9/5 + 32;
+        if (unit === "K") return base + 273.15;
+    }
+    if (cat === "fuel") {
+        if (unit === "kml")    return base;
+        if (unit === "l100")   return base === 0 ? Infinity : 100 / base;
+        if (unit === "mpg_us") return base / 0.425144;
+        if (unit === "mpg_uk") return base / 0.354006;
+    }
+    return base / UNITS[cat].units[unit].factor;
+}
+
+function fmt(n) {
+    if (!isFinite(n)) return "∞";
+    if (n === 0) return "0";
+    const abs = Math.abs(n);
+    if (abs >= 1e9)   return n.toExponential(4);
+    if (abs >= 0.001) return +n.toPrecision(7) + "";
+    return n.toExponential(4);
+}
+
+function updateUnits() {
+    const cat = document.getElementById("category").value;
+    const unitMap = UNITS[cat].units;
+    const keys = Object.keys(unitMap);
+    ["from_unit","to_unit"].forEach((id, i) => {
+        const sel = document.getElementById(id);
+        sel.innerHTML = keys.map(k => `<option value="${k}">${unitMap[k].label}</option>`).join("");
+        sel.selectedIndex = i === 1 ? Math.min(1, keys.length - 1) : 0;
+    });
+    convert();
+}
+
+function convert() {
+    const cat = document.getElementById("category").value;
+    const val = parseFloat(document.getElementById("from_val").value);
+    const fromU = document.getElementById("from_unit").value;
+    const toU   = document.getElementById("to_unit").value;
+    if (isNaN(val)) return;
+
+    const base   = toBase(val, fromU, cat);
+    const result = fromBase(base, toU, cat);
+
+    document.getElementById("to_val").value = fmt(result);
+
+    const fromLabel = UNITS[cat].units[fromU].label.split(" (")[0];
+    const toLabel   = UNITS[cat].units[toU].label.split(" (")[0];
+    const formula   = document.getElementById("r-formula");
+    formula.style.display = "block";
+    formula.innerHTML = `<strong>${fmt(val)} ${fromLabel}</strong> = <strong>${fmt(result)} ${toLabel}</strong>`;
+
+    // Build all-units table
+    const unitMap = UNITS[cat].units;
+    const rows = Object.entries(unitMap).map(([k, u]) => {
+        const r = fromBase(base, k, cat);
+        const highlight = k === toU ? "background:var(--accent-soft);" : "";
+        return `<tr style="${highlight}"><td style="padding:.4rem .5rem;color:var(--text-secondary);border-bottom:1px solid var(--border);">${u.label}</td><td style="padding:.4rem .5rem;text-align:right;font-weight:600;border-bottom:1px solid var(--border);">${fmt(r)}</td></tr>`;
+    }).join("");
+    document.getElementById("all-tbody").innerHTML = rows;
+}
+
+updateUnits();
+</script>
+{% endblock %}

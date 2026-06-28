@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Business Days — CalcHub{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="/">Home</a><span class="sep">/</span><a href="/utility">Utility</a><span class="sep">/</span><span class="current">Business Days</span></div>
+<div class="page-header"><h1>Business Days Calculator</h1><p>Working days between two dates, excluding weekends</p></div>
+<div class="calc-layout">
+<div class="calc-form">
+    <h2>Enter Dates</h2>
+    <div class="field-row">
+        <div class="field"><label for="d1">Start Date</label><input type="date" id="d1" style="width:100%;padding:.55rem .75rem;border:1.5px solid var(--border);border-radius:8px;font-size:.9rem;font-family:inherit;"></div>
+        <div class="field"><label for="d2">End Date</label><input type="date" id="d2" style="width:100%;padding:.55rem .75rem;border:1.5px solid var(--border);border-radius:8px;font-size:.9rem;font-family:inherit;"></div>
+    </div>
+    <button class="btn btn-primary" onclick="calculate()">Calculate</button>
+</div>
+<div class="calc-results">
+    <h2>Results</h2>
+    <div id="results-placeholder" class="results-placeholder"><div class="icon">📆</div><p>Select two dates and click Calculate.</p></div>
+    <div id="results" style="display:none;">
+        <div class="result-hero"><div class="label">Business Days</div><div class="value" id="r-biz"></div></div>
+        <div class="result-stats">
+            <div class="stat-card"><div class="label">Total Calendar Days</div><div class="value" id="r-total"></div></div>
+            <div class="stat-card orange"><div class="label">Weekend Days</div><div class="value" id="r-weekend"></div></div>
+        </div>
+        <div class="info-box">Weekends (Saturday & Sunday) are excluded. Public holidays are not excluded.</div>
+    </div>
+</div>
+</div>
+{% endblock %}
+{% block scripts %}<script>
+const today = new Date().toISOString().split("T")[0];
+document.getElementById("d1").value = today;
+document.getElementById("d2").value = today;
+
+function calculate() {
+    const d1 = new Date(document.getElementById("d1").value);
+    const d2 = new Date(document.getElementById("d2").value);
+    if (isNaN(d1) || isNaN(d2)) return alert("Please enter valid dates.");
+    const start = d1 < d2 ? d1 : d2;
+    const end   = d1 < d2 ? d2 : d1;
+    let biz = 0, total = 0;
+    const cur = new Date(start);
+    while (cur <= end) { total++; const dow = cur.getDay(); if (dow !== 0 && dow !== 6) biz++; cur.setDate(cur.getDate() + 1); }
+    showResults("results");
+    document.getElementById("r-biz").textContent = biz;
+    document.getElementById("r-total").textContent = total;
+    document.getElementById("r-weekend").textContent = total - biz;
+}
+</script>{% endblock %}

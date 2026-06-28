@@ -105,6 +105,8 @@ async function calculate() {
     document.getElementById("r-lose05").textContent = Math.round(d.calories_to_lose_05kg) + " kcal";
     document.getElementById("r-lose1").textContent = Math.round(d.calories_to_lose_1kg) + " kcal";
     document.getElementById("r-gain05").textContent = Math.round(d.calories_to_gain_05kg) + " kcal";
+
+    saveCalcResult('bmrTdee', { bmr: d.bmr, tdee: d.tdee, weight_kg: d.weight_kg, height_cm: d.height_cm, age: d.age, gender: d.gender, activity_level: d.activity_level });
 }
 </script>
 {% endblock %}

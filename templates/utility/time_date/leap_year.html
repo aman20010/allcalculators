@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Leap Year Checker — CalcHub{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="/">Home</a><span class="sep">/</span><a href="/utility">Utility</a><span class="sep">/</span><span class="current">Leap Year</span></div>
+<div class="page-header"><h1>Leap Year Checker</h1><p>Is a given year a leap year? Rule: divisible by 4, but not 100, unless also 400</p></div>
+<div class="calc-layout">
+<div class="calc-form">
+    <h2>Enter Year</h2>
+    <div class="field"><label for="yr">Year</label><input type="number" id="yr" value="2024" min="1" max="9999"></div>
+    <button class="btn btn-primary" onclick="calculate()">Check</button>
+</div>
+<div class="calc-results">
+    <h2>Results</h2>
+    <div id="results-placeholder" class="results-placeholder"><div class="icon">🐸</div><p>Enter a year and click Check.</p></div>
+    <div id="results" style="display:none;">
+        <div class="result-hero" id="r-hero"><div class="label" id="r-lbl">Year</div><div class="value" id="r-val"></div></div>
+        <div class="info-box" id="r-info"></div>
+        <div class="section-label" style="margin-top:1rem;">Nearby Leap Years</div>
+        <div id="r-nearby" style="display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.5rem;"></div>
+    </div>
+</div>
+</div>
+{% endblock %}
+{% block scripts %}<script>
+function isLeap(y) { return (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0; }
+function calculate() {
+    const yr = +document.getElementById("yr").value;
+    if (!yr || yr < 1) return alert("Enter a valid year.");
+    const leap = isLeap(yr);
+    showResults("results");
+    const hero = document.getElementById("r-hero");
+    hero.style.background = leap ? "linear-gradient(135deg,var(--green-light),#d1fae5)" : "linear-gradient(135deg,var(--surface-alt),var(--border))";
+    document.getElementById("r-lbl").textContent = yr;
+    document.getElementById("r-val").textContent = leap ? "✓ Leap Year" : "✗ Not a Leap Year";
+    document.getElementById("r-val").style.color = leap ? "var(--green)" : "var(--text)";
+    const why = yr % 400 === 0 ? "Divisible by 400 → leap year." : yr % 100 === 0 ? "Divisible by 100 but not 400 → NOT a leap year." : yr % 4 === 0 ? "Divisible by 4 (and not 100) → leap year." : "Not divisible by 4 → NOT a leap year.";
+    document.getElementById("r-info").innerHTML = `<strong>Rule check:</strong> ${why} Feb has ${leap?29:28} days in ${yr}.`;
+    const nearby = []; let y = yr - 1;
+    while (nearby.length < 4) { if (isLeap(y) && y !== yr) nearby.unshift(y); y--; if (y < 1) break; }
+    y = yr + 1;
+    while (nearby.length < 8) { if (isLeap(y)) nearby.push(y); y++; }
+    document.getElementById("r-nearby").innerHTML = nearby.slice(0,8).map(n => `<span style="padding:.3rem .75rem;background:${n===yr?'var(--accent)':'var(--surface-alt)'};color:${n===yr?'#fff':'var(--text)'};border-radius:6px;font-size:.82rem;font-weight:600;border:1px solid var(--border);">${n}</span>`).join("");
+}
+</script>{% endblock %}

@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Prime Number Checker — CalcHub{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="/">Home</a><span class="sep">/</span><a href="/utility">Utility</a><span class="sep">/</span><span class="current">Prime Checker</span></div>
+<div class="page-header"><h1>Prime Number Checker</h1><p>Is a number prime? Prime factorization and nearby primes</p></div>
+<div class="calc-layout">
+<div class="calc-form">
+    <h2>Enter Number</h2>
+    <div class="field"><label for="n">Number</label><input type="number" id="n" value="97" min="1" max="99999999"></div>
+    <button class="btn btn-primary" onclick="calculate()">Check</button>
+</div>
+<div class="calc-results">
+    <h2>Results</h2>
+    <div id="results-placeholder" class="results-placeholder"><div class="icon">ℙ</div><p>Enter a number and click Check.</p></div>
+    <div id="results" style="display:none;">
+        <div class="result-hero" id="r-hero"><div class="label" id="r-lbl"></div><div class="value" id="r-val"></div></div>
+        <div class="info-box" id="r-info"></div>
+        <div class="section-label" style="margin-top:1rem;">Nearby Primes</div>
+        <div id="r-nearby" style="display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.5rem;"></div>
+    </div>
+</div>
+</div>
+{% endblock %}
+{% block scripts %}<script>
+function isPrime(n) { if(n<2)return false; if(n<4)return true; if(n%2===0||n%3===0)return false; for(let i=5;i*i<=n;i+=6)if(n%i===0||n%(i+2)===0)return false; return true; }
+function primeFactors(n) { const f=[]; while(n%2===0){f.push(2);n/=2;} for(let i=3;i*i<=n;i+=2)while(n%i===0){f.push(i);n/=i;} if(n>2)f.push(n); return f; }
+function calculate() {
+    const n = +document.getElementById("n").value;
+    if (!n || n<1) return alert("Enter a positive integer.");
+    const prime = isPrime(n);
+    showResults("results");
+    const hero = document.getElementById("r-hero");
+    hero.style.background = prime ? "linear-gradient(135deg,var(--green-light),#d1fae5)" : "linear-gradient(135deg,var(--surface-alt),var(--border))";
+    document.getElementById("r-lbl").textContent = n;
+    document.getElementById("r-val").textContent = prime ? "✓ Prime" : "✗ Not Prime";
+    document.getElementById("r-val").style.color = prime ? "var(--green)" : "var(--text)";
+    if (!prime) {
+        const factors = primeFactors(n);
+        document.getElementById("r-info").innerHTML = `<strong>Prime Factorization:</strong> ${n} = ${factors.join(" × ")}`;
+    } else {
+        document.getElementById("r-info").innerHTML = `<strong>${n}</strong> is a prime number. It has no factors other than 1 and itself.`;
+    }
+    const nearby=[]; let x=n-1; while(nearby.length<5&&x>1){if(isPrime(x))nearby.unshift(x);x--;} x=n+1; while(nearby.length<10){if(isPrime(x))nearby.push(x);x++;if(x>n+1000)break;}
+    document.getElementById("r-nearby").innerHTML=nearby.map(p=>`<span style="padding:.3rem .7rem;background:${p===n?"var(--accent)":"var(--surface-alt)"};color:${p===n?"#fff":"var(--text)"};border-radius:6px;font-size:.82rem;font-weight:600;border:1px solid var(--border);">${p}</span>`).join("");
+}
+</script>{% endblock %}

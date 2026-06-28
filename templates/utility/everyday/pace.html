@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}Pace Calculator — CalcHub{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="/">Home</a><span class="sep">/</span><a href="/utility">Utility</a><span class="sep">/</span><span class="current">Pace Calculator</span></div>
+<div class="page-header"><h1>Pace Calculator</h1><p>Running pace, speed, and finish time for any distance</p></div>
+<div class="calc-layout">
+<div class="calc-form">
+    <h2>Running Details</h2>
+    <div class="field"><label for="dist">Distance</label><div class="input-wrap"><input type="number" id="dist" value="10" step="any"><span class="suffix">km</span></div></div>
+    <div class="field"><label>Time</label>
+        <div style="display:flex;gap:.5rem;">
+            <div class="input-wrap" style="flex:1;"><input type="number" id="h" value="0" min="0" placeholder="0"><span class="suffix">h</span></div>
+            <div class="input-wrap" style="flex:1;"><input type="number" id="m" value="55" min="0" max="59" placeholder="0"><span class="suffix">m</span></div>
+            <div class="input-wrap" style="flex:1;"><input type="number" id="s" value="0" min="0" max="59" placeholder="0"><span class="suffix">s</span></div>
+        </div>
+    </div>
+    <button class="btn btn-primary" onclick="calculate()">Calculate</button>
+    <div style="border-top:1px solid var(--border);margin:1.25rem 0;"></div>
+    <h2>Predict Finish Time</h2>
+    <div class="field"><label for="preset">Race distance</label>
+        <select id="preset" onchange="setPreset()" style="padding:.55rem .75rem;border:1.5px solid var(--border);border-radius:8px;font-size:.9rem;font-family:inherit;width:100%;">
+            <option value="">—</option><option value="5">5K</option><option value="10">10K</option><option value="21.0975">Half Marathon</option><option value="42.195">Marathon</option>
+        </select>
+    </div>
+</div>
+<div class="calc-results">
+    <h2>Results</h2>
+    <div id="results-placeholder" class="results-placeholder"><div class="icon">🏃</div><p>Enter distance and time to get your pace.</p></div>
+    <div id="results" style="display:none;">
+        <div class="result-hero"><div class="label">Pace</div><div class="value" id="r-pace"></div><div class="sub">min/km</div></div>
+        <div class="result-stats">
+            <div class="stat-card blue"><div class="label">Speed</div><div class="value" id="r-speed"></div><div class="sub">km/h</div></div>
+            <div class="stat-card green"><div class="label">Finish (5K at this pace)</div><div class="value" id="r-5k"></div></div>
+            <div class="stat-card orange"><div class="label">Finish (10K at this pace)</div><div class="value" id="r-10k"></div></div>
+            <div class="stat-card"><div class="label">Finish (Half Marathon)</div><div class="value" id="r-hm"></div></div>
+            <div class="stat-card"><div class="label">Finish (Marathon)</div><div class="value" id="r-fm"></div></div>
+        </div>
+    </div>
+</div>
+</div>
+{% endblock %}
+{% block scripts %}<script>
+function setPreset(){
+    const v=document.getElementById("preset").value;
+    if(v){document.getElementById("dist").value=v; calculate();}
+}
+function fmtTime(totalSec){
+    const h=Math.floor(totalSec/3600), m=Math.floor((totalSec%3600)/60), s=Math.round(totalSec%60);
+    if(h>0)return `${h}h ${String(m).padStart(2,"0")}m ${String(s).padStart(2,"0")}s`;
+    return `${m}m ${String(s).padStart(2,"0")}s`;
+}
+function calculate(){
+    const dist=+document.getElementById("dist").value;
+    const totalSec=(+document.getElementById("h").value)*3600+(+document.getElementById("m").value)*60+(+document.getElementById("s").value);
+    if(!dist||!totalSec)return alert("Enter distance and time.");
+    const paceSec=totalSec/dist;
+    const pm=Math.floor(paceSec/60), ps=Math.round(paceSec%60);
+    showResults("results");
+    document.getElementById("r-pace").textContent=`${pm}:${String(ps).padStart(2,"0")}`;
+    document.getElementById("r-speed").textContent=+(dist/(totalSec/3600)).toFixed(2);
+    document.getElementById("r-5k").textContent=fmtTime(paceSec*5);
+    document.getElementById("r-10k").textContent=fmtTime(paceSec*10);
+    document.getElementById("r-hm").textContent=fmtTime(paceSec*21.0975);
+    document.getElementById("r-fm").textContent=fmtTime(paceSec*42.195);
+}
+</script>{% endblock %}

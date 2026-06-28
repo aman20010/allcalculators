@@ -100,6 +100,15 @@ async function calculate() {
     document.getElementById("r-category").textContent = d.category;
     document.getElementById("r-fat").textContent = d.fat_mass_kg + " kg";
     document.getElementById("r-lean").textContent = d.lean_mass_kg + " kg";
+
+    saveCalcResult('bodyFat', {
+        body_fat_percent: d.body_fat_percent,
+        fat_mass_kg: d.fat_mass_kg,
+        lean_mass_kg: d.lean_mass_kg,
+        gender: data.gender,
+        weight_kg: data.weight_kg,
+        height_cm: data.height_cm,
+    });
 }
 </script>
 {% endblock %}

@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Percentage Increase — CalcHub{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="/">Home</a><span class="sep">/</span><a href="/utility">Utility</a><span class="sep">/</span><span class="current">Percentage Increase</span></div>
+<div class="page-header"><h1>Percentage Increase Calculator</h1><p>Increase a number by a given percentage</p></div>
+<div class="calc-layout">
+<div class="calc-form">
+    <h2>Enter Values</h2>
+    <div class="field"><label for="val">Original Value</label><input type="number" id="val" value="1000" step="any"></div>
+    <div class="field"><label for="pct">Increase by (%)</label><div class="input-wrap"><input type="number" id="pct" value="20" step="any"><span class="suffix">%</span></div></div>
+    <button class="btn btn-primary" onclick="calculate()">Calculate</button>
+</div>
+<div class="calc-results">
+    <h2>Results</h2>
+    <div id="results-placeholder" class="results-placeholder"><div class="icon">📈</div><p>Enter values and click Calculate.</p></div>
+    <div id="results" style="display:none;">
+        <div class="result-hero"><div class="label">New Value</div><div class="value" id="r-new"></div></div>
+        <div class="result-stats">
+            <div class="stat-card"><div class="label">Original Value</div><div class="value" id="r-orig"></div></div>
+            <div class="stat-card green"><div class="label">Increase Amount</div><div class="value" id="r-inc"></div></div>
+        </div>
+        <div class="info-box" id="r-formula"></div>
+    </div>
+</div>
+</div>
+{% endblock %}
+{% block scripts %}<script>
+function calculate() {
+    const v=+document.getElementById("val").value, p=+document.getElementById("pct").value;
+    const inc = v * p/100, nv = v + inc;
+    showResults("results");
+    document.getElementById("r-new").textContent = +nv.toPrecision(8);
+    document.getElementById("r-orig").textContent = v;
+    document.getElementById("r-inc").textContent = +inc.toPrecision(6);
+    document.getElementById("r-formula").innerHTML = `<strong>Formula:</strong> ${v} × (1 + ${p}/100) = ${+nv.toPrecision(8)}`;
+}
+</script>{% endblock %}

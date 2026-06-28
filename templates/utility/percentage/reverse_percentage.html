@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Reverse Percentage — CalcHub{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="/">Home</a><span class="sep">/</span><a href="/utility">Utility</a><span class="sep">/</span><span class="current">Reverse Percentage</span></div>
+<div class="page-header"><h1>Reverse Percentage Calculator</h1><p>X is Y% of what number?</p></div>
+<div class="calc-layout">
+<div class="calc-form">
+    <h2>Enter Values</h2>
+    <div class="field"><label for="val">Known Value (X)</label><input type="number" id="val" value="30" step="any"></div>
+    <div class="field"><label for="pct">Is what % (Y)</label><div class="input-wrap"><input type="number" id="pct" value="15" step="any"><span class="suffix">%</span></div></div>
+    <button class="btn btn-primary" onclick="calculate()">Calculate</button>
+</div>
+<div class="calc-results">
+    <h2>Results</h2>
+    <div id="results-placeholder" class="results-placeholder"><div class="icon">🔄</div><p>Enter values and click Calculate.</p></div>
+    <div id="results" style="display:none;">
+        <div class="result-hero"><div class="label">Original Whole</div><div class="value" id="r-whole"></div></div>
+        <div class="info-box" id="r-formula"></div>
+    </div>
+</div>
+</div>
+{% endblock %}
+{% block scripts %}<script>
+function calculate() {
+    const v=+document.getElementById("val").value, p=+document.getElementById("pct").value;
+    if (!p) return alert("Percentage cannot be 0.");
+    const whole = v / (p/100);
+    showResults("results");
+    document.getElementById("r-whole").textContent = +whole.toPrecision(8);
+    document.getElementById("r-formula").innerHTML = `<strong>${v} is ${p}% of: </strong>${+whole.toPrecision(8)}<br><span style="font-size:.75rem;color:var(--text-muted);">Formula: ${v} ÷ (${p}/100) = ${+whole.toPrecision(8)}</span>`;
+}
+</script>{% endblock %}

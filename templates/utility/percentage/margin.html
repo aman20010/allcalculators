@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Margin Calculator — CalcHub{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="/">Home</a><span class="sep">/</span><a href="/utility">Utility</a><span class="sep">/</span><span class="current">Margin</span></div>
+<div class="page-header"><h1>Margin Calculator</h1><p>Gross profit margin from revenue and cost</p></div>
+<div class="calc-layout">
+<div class="calc-form">
+    <h2>Enter Values</h2>
+    <div class="field"><label for="rev">Revenue (Selling Price)</label><div class="input-wrap"><span class="prefix">₹</span><input type="number" id="rev" class="has-prefix" value="1000" step="any"></div></div>
+    <div class="field"><label for="cost">Cost of Goods</label><div class="input-wrap"><span class="prefix">₹</span><input type="number" id="cost" class="has-prefix" value="600" step="any"></div></div>
+    <button class="btn btn-primary" onclick="calculate()">Calculate</button>
+</div>
+<div class="calc-results">
+    <h2>Results</h2>
+    <div id="results-placeholder" class="results-placeholder"><div class="icon">💼</div><p>Enter revenue and cost.</p></div>
+    <div id="results" style="display:none;">
+        <div class="result-hero"><div class="label">Gross Margin</div><div class="value" id="r-margin"></div></div>
+        <div class="result-stats">
+            <div class="stat-card green"><div class="label">Gross Profit</div><div class="value" id="r-profit"></div></div>
+            <div class="stat-card blue"><div class="label">Markup %</div><div class="value" id="r-mu"></div></div>
+            <div class="stat-card"><div class="label">Cost % of Revenue</div><div class="value" id="r-cost-pct"></div></div>
+        </div>
+    </div>
+</div>
+</div>
+{% endblock %}
+{% block scripts %}<script>
+function calculate() {
+    const rev=+document.getElementById("rev").value, cost=+document.getElementById("cost").value;
+    if (!rev) return alert("Revenue cannot be 0.");
+    const profit=rev-cost, margin=profit/rev*100, mu=cost>0?profit/cost*100:0;
+    showResults("results");
+    document.getElementById("r-margin").textContent = margin.toFixed(2) + "%";
+    document.getElementById("r-profit").textContent = "₹" + profit.toLocaleString("en-IN",{maximumFractionDigits:2});
+    document.getElementById("r-mu").textContent = mu.toFixed(2) + "%";
+    document.getElementById("r-cost-pct").textContent = (cost/rev*100).toFixed(2) + "%";
+}
+</script>{% endblock %}

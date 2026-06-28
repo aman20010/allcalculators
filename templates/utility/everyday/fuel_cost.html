@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Fuel Cost — CalcHub{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="/">Home</a><span class="sep">/</span><a href="/utility">Utility</a><span class="sep">/</span><span class="current">Fuel Cost</span></div>
+<div class="page-header"><h1>Fuel Cost Calculator</h1><p>Trip fuel cost and efficiency analysis</p></div>
+<div class="calc-layout">
+<div class="calc-form">
+    <h2>Trip Details</h2>
+    <div class="field"><label for="dist">Distance</label><div class="input-wrap"><input type="number" id="dist" value="250" step="any"><span class="suffix">km</span></div></div>
+    <div class="field"><label for="mileage">Fuel Efficiency</label><div class="input-wrap"><input type="number" id="mileage" value="15" step="any"><span class="suffix">km/L</span></div></div>
+    <div class="field"><label for="price">Fuel Price</label><div class="input-wrap"><span class="prefix">₹</span><input type="number" id="price" class="has-prefix" value="104" step="any"><span class="suffix">/L</span></div></div>
+    <button class="btn btn-primary" onclick="calculate()">Calculate</button>
+</div>
+<div class="calc-results">
+    <h2>Results</h2>
+    <div id="results-placeholder" class="results-placeholder"><div class="icon">⛽</div><p>Enter trip details and click Calculate.</p></div>
+    <div id="results" style="display:none;">
+        <div class="result-hero"><div class="label">Total Fuel Cost</div><div class="value" id="r-cost"></div></div>
+        <div class="result-stats">
+            <div class="stat-card blue"><div class="label">Fuel Required</div><div class="value" id="r-fuel"></div></div>
+            <div class="stat-card"><div class="label">Cost per km</div><div class="value" id="r-cpkm"></div></div>
+        </div>
+    </div>
+</div>
+</div>
+{% endblock %}
+{% block scripts %}<script>
+function calculate() {
+    const d=+document.getElementById("dist").value, m=+document.getElementById("mileage").value, p=+document.getElementById("price").value;
+    if(!m) return alert("Fuel efficiency cannot be 0.");
+    const fuel=d/m, cost=fuel*p, cpkm=cost/d;
+    showResults("results");
+    const fmt=v=>"₹"+v.toLocaleString("en-IN",{maximumFractionDigits:2});
+    document.getElementById("r-cost").textContent=fmt(cost);
+    document.getElementById("r-fuel").textContent=fuel.toFixed(2)+" L";
+    document.getElementById("r-cpkm").textContent=fmt(cpkm)+" /km";
+}
+</script>{% endblock %}

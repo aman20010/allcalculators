@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Markup Calculator — CalcHub{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="/">Home</a><span class="sep">/</span><a href="/utility">Utility</a><span class="sep">/</span><span class="current">Markup</span></div>
+<div class="page-header"><h1>Markup Calculator</h1><p>Selling price from cost and markup percentage</p></div>
+<div class="calc-layout">
+<div class="calc-form">
+    <h2>Enter Values</h2>
+    <div class="field"><label for="cost">Cost Price</label><div class="input-wrap"><span class="prefix">₹</span><input type="number" id="cost" class="has-prefix" value="500" step="any"></div></div>
+    <div class="field"><label for="mu">Markup (%)</label><div class="input-wrap"><input type="number" id="mu" value="40" step="any"><span class="suffix">%</span></div></div>
+    <button class="btn btn-primary" onclick="calculate()">Calculate</button>
+</div>
+<div class="calc-results">
+    <h2>Results</h2>
+    <div id="results-placeholder" class="results-placeholder"><div class="icon">💹</div><p>Enter cost and markup.</p></div>
+    <div id="results" style="display:none;">
+        <div class="result-hero"><div class="label">Selling Price</div><div class="value" id="r-sell"></div></div>
+        <div class="result-stats">
+            <div class="stat-card"><div class="label">Cost Price</div><div class="value" id="r-cost"></div></div>
+            <div class="stat-card green"><div class="label">Profit</div><div class="value" id="r-profit"></div></div>
+            <div class="stat-card blue"><div class="label">Gross Margin</div><div class="value" id="r-margin"></div></div>
+        </div>
+        <div class="info-box">Markup % is calculated on <strong>cost</strong>. Margin % is calculated on <strong>selling price</strong>.</div>
+    </div>
+</div>
+</div>
+{% endblock %}
+{% block scripts %}<script>
+function calculate() {
+    const cost=+document.getElementById("cost").value, mu=+document.getElementById("mu").value;
+    const profit=cost*mu/100, sell=cost+profit, margin=profit/sell*100;
+    showResults("results");
+    document.getElementById("r-sell").textContent = "₹" + sell.toLocaleString("en-IN",{maximumFractionDigits:2});
+    document.getElementById("r-cost").textContent = "₹" + cost.toLocaleString("en-IN",{maximumFractionDigits:2});
+    document.getElementById("r-profit").textContent = "₹" + profit.toLocaleString("en-IN",{maximumFractionDigits:2});
+    document.getElementById("r-margin").textContent = margin.toFixed(2) + "%";
+}
+</script>{% endblock %}

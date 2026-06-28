@@ -3,6 +3,7 @@ from .engines import (
     calc_pf, calc_sip, calc_sip_stepup, calc_sip_stepup_lumpsum,
     calc_gratuity, calc_emi, calc_ppf, calc_fd, calc_lumpsum,
     calc_retirement, adjust_for_inflation,
+    calc_retirement_readiness, calc_inflation_corpus,
 )
 
 finance_bp = Blueprint("finance", __name__, url_prefix="/finance")
@@ -78,6 +79,14 @@ def lumpsum_page():
 @finance_bp.route("/retirement")
 def retirement_page():
     return render_template("finance/retirement.html")
+
+@finance_bp.route("/retirement-readiness")
+def retirement_readiness_page():
+    return render_template("finance/retirement_readiness.html")
+
+@finance_bp.route("/inflation-corpus")
+def inflation_corpus_page():
+    return render_template("finance/inflation_corpus.html")
 
 
 # ── API routes ──
@@ -245,6 +254,34 @@ def api_retirement():
         years = int(data.get("retirement_age", 60)) - int(data.get("current_age", 30))
         data["time_years"] = years
         result = _with_inflation(result, data)
+        return jsonify({"status": "success", "data": result})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 400
+
+
+@finance_bp.route("/api/retirement-readiness", methods=["POST"])
+def api_retirement_readiness():
+    data = request.get_json()
+    try:
+        result = calc_retirement_readiness(
+            corpus_needed=_get_float(data, "corpus_needed"),
+            projected_corpus=_get_float(data, "projected_corpus"),
+            years_to_retire=int(data.get("years_to_retire", 30)),
+        )
+        return jsonify({"status": "success", "data": result})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 400
+
+
+@finance_bp.route("/api/inflation-corpus", methods=["POST"])
+def api_inflation_corpus():
+    data = request.get_json()
+    try:
+        result = calc_inflation_corpus(
+            corpus=_get_float(data, "corpus"),
+            years=int(data.get("years", 20)),
+            inflation_rate=_get_float(data, "inflation_rate", 6.0),
+        )
         return jsonify({"status": "success", "data": result})
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 400

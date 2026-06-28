@@ -1,3 +1,76 @@
+def calc_retirement_readiness(corpus_needed, projected_corpus, years_to_retire):
+    """Score retirement readiness 0–100 based on corpus gap."""
+    if corpus_needed <= 0:
+        return {"error": "Corpus needed must be greater than 0"}
+
+    score = min(100, (projected_corpus / corpus_needed) * 100)
+    shortfall = max(0, corpus_needed - projected_corpus)
+    surplus = max(0, projected_corpus - corpus_needed)
+
+    if score >= 100:
+        status, color = "On Track", "green"
+        message = "You're on track to meet your retirement goal."
+    elif score >= 75:
+        status, color = "Good Progress", "green"
+        message = "Good progress — small adjustments will get you there."
+    elif score >= 50:
+        status, color = "Needs Attention", "orange"
+        message = "You need to increase your monthly savings."
+    elif score >= 25:
+        status, color = "Behind Schedule", "red"
+        message = "Significant savings increase required."
+    else:
+        status, color = "Critical Gap", "red"
+        message = "Immediate action needed to close the retirement gap."
+
+    extra_monthly = 0
+    if shortfall > 0 and years_to_retire > 0:
+        monthly_rate = 0.12 / 12
+        months = years_to_retire * 12
+        extra_monthly = shortfall * monthly_rate / (((1 + monthly_rate) ** months - 1) * (1 + monthly_rate))
+
+    return {
+        "readiness_score": round(score, 1),
+        "status": status,
+        "color": color,
+        "message": message,
+        "corpus_needed": round(corpus_needed, 2),
+        "projected_corpus": round(projected_corpus, 2),
+        "shortfall": round(shortfall, 2),
+        "surplus": round(surplus, 2),
+        "extra_monthly_needed": round(extra_monthly, 2),
+        "years_to_retire": years_to_retire,
+    }
+
+
+def calc_inflation_corpus(corpus, years, inflation_rate=6.0):
+    """Real purchasing power of a corpus after inflation."""
+    if inflation_rate <= 0:
+        return {
+            "nominal_corpus": round(corpus, 2),
+            "real_corpus": round(corpus, 2),
+            "purchasing_power_loss": 0,
+            "loss_percent": 0,
+            "price_level_multiplier": 1.0,
+            "inflation_rate": inflation_rate,
+            "years": years,
+        }
+
+    factor = (1 + inflation_rate / 100) ** years
+    real_corpus = corpus / factor
+    loss = corpus - real_corpus
+
+    return {
+        "nominal_corpus": round(corpus, 2),
+        "real_corpus": round(real_corpus, 2),
+        "purchasing_power_loss": round(loss, 2),
+        "loss_percent": round((loss / corpus) * 100, 1),
+        "price_level_multiplier": round(factor, 2),
+        "inflation_rate": inflation_rate,
+        "years": years,
+    }
+
+
 def adjust_for_inflation(result, inflation_rate, years):
     if inflation_rate <= 0:
         return result

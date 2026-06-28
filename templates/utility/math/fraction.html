@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Fraction Calculator — CalcHub{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="/">Home</a><span class="sep">/</span><a href="/utility">Utility</a><span class="sep">/</span><span class="current">Fraction</span></div>
+<div class="page-header"><h1>Fraction Calculator</h1><p>Add, subtract, multiply, and divide fractions</p></div>
+<div class="calc-form" style="max-width:520px;">
+    <h2>Enter Fractions</h2>
+    <div style="display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;margin-bottom:1rem;">
+        <div style="text-align:center;"><input type="number" id="n1" value="1" style="width:70px;padding:.45rem;border:1.5px solid var(--border);border-radius:6px;text-align:center;font-size:1rem;"><div style="border-top:2px solid var(--text);margin:.2rem 0;"></div><input type="number" id="d1" value="2" style="width:70px;padding:.45rem;border:1.5px solid var(--border);border-radius:6px;text-align:center;font-size:1rem;"></div>
+        <div>
+            <select id="op" style="padding:.55rem .75rem;border:1.5px solid var(--border);border-radius:8px;font-size:1rem;font-family:inherit;">
+                <option value="+">+</option><option value="-">−</option><option value="*">×</option><option value="/">÷</option>
+            </select>
+        </div>
+        <div style="text-align:center;"><input type="number" id="n2" value="1" style="width:70px;padding:.45rem;border:1.5px solid var(--border);border-radius:6px;text-align:center;font-size:1rem;"><div style="border-top:2px solid var(--text);margin:.2rem 0;"></div><input type="number" id="d2" value="3" style="width:70px;padding:.45rem;border:1.5px solid var(--border);border-radius:6px;text-align:center;font-size:1rem;"></div>
+        <button class="btn btn-primary" onclick="calculate()" style="width:auto;padding:.65rem 1.25rem;">=</button>
+    </div>
+    <div id="r-result" class="result-hero" style="display:none;"><div class="label">Result</div><div class="value" id="r-frac"></div><div class="sub" id="r-dec"></div></div>
+</div>
+{% endblock %}
+{% block scripts %}<script>
+function gcd(a,b){a=Math.abs(a);b=Math.abs(b);while(b){let t=b;b=a%b;a=t;}return a;}
+function calculate() {
+    const n1=+document.getElementById("n1").value, d1=+document.getElementById("d1").value;
+    const n2=+document.getElementById("n2").value, d2=+document.getElementById("d2").value;
+    const op=document.getElementById("op").value;
+    if(!d1||!d2) return alert("Denominator cannot be 0.");
+    let rn, rd;
+    if(op==="+"){rn=n1*d2+n2*d1;rd=d1*d2;}
+    else if(op==="-"){rn=n1*d2-n2*d1;rd=d1*d2;}
+    else if(op==="*"){rn=n1*n2;rd=d1*d2;}
+    else{if(!n2) return alert("Cannot divide by 0."); rn=n1*d2;rd=d1*n2;}
+    const g=gcd(Math.abs(rn),Math.abs(rd)); const sn=rn/g, sd=rd/g;
+    const neg=sd<0; const fn=neg?-sn:sn, fd=neg?-sd:sd;
+    const whole=Math.trunc(fn/fd), rem=fn%fd;
+    let fracStr=fd===1?`${fn}`:`${fn}/${fd}`;
+    if(Math.abs(whole)>0&&rem!==0) fracStr=`${whole} ${Math.abs(rem)}/${Math.abs(fd)}`;
+    document.getElementById("r-result").style.display="block";
+    document.getElementById("r-frac").textContent=fracStr;
+    document.getElementById("r-dec").textContent="≈ " + (fn/fd).toPrecision(8);
+}
+</script>{% endblock %}

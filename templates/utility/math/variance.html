@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Variance Calculator — CalcHub{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="/">Home</a><span class="sep">/</span><a href="/utility">Utility</a><span class="sep">/</span><span class="current">Variance</span></div>
+<div class="page-header"><h1>Variance Calculator</h1><p>Population and sample variance of a dataset</p></div>
+<div class="calc-layout">
+<div class="calc-form">
+    <h2>Enter Numbers</h2>
+    <div class="field"><label for="nums">Numbers (comma or space separated)</label><textarea id="nums" rows="4" style="width:100%;padding:.55rem .75rem;border:1.5px solid var(--border);border-radius:8px;font-size:.9rem;font-family:inherit;resize:vertical;">2, 4, 4, 4, 5, 5, 7, 9</textarea></div>
+    <button class="btn btn-primary" onclick="calculate()">Calculate</button>
+</div>
+<div class="calc-results">
+    <h2>Results</h2>
+    <div id="results-placeholder" class="results-placeholder"><div class="icon">σ²</div><p>Enter numbers and click Calculate.</p></div>
+    <div id="results" style="display:none;">
+        <div class="result-hero"><div class="label">Population Variance (σ²)</div><div class="value" id="r-pop"></div></div>
+        <div class="result-stats">
+            <div class="stat-card blue"><div class="label">Sample Variance (s²)</div><div class="value" id="r-sam"></div></div>
+            <div class="stat-card"><div class="label">Mean</div><div class="value" id="r-mean"></div></div>
+            <div class="stat-card green"><div class="label">Std Dev (pop σ)</div><div class="value" id="r-sd"></div></div>
+        </div>
+    </div>
+</div>
+</div>
+{% endblock %}
+{% block scripts %}<script>
+function calculate() {
+    const nums = document.getElementById("nums").value.split(/[\s,;]+/).map(Number).filter(n=>!isNaN(n));
+    if (nums.length < 2) return alert("Enter at least 2 numbers.");
+    const n=nums.length, mean=nums.reduce((a,b)=>a+b,0)/n;
+    const sq=nums.map(x=>(x-mean)**2), varPop=sq.reduce((a,b)=>a+b,0)/n, varSam=sq.reduce((a,b)=>a+b,0)/(n-1);
+    showResults("results");
+    document.getElementById("r-pop").textContent = +varPop.toPrecision(6);
+    document.getElementById("r-sam").textContent = +varSam.toPrecision(6);
+    document.getElementById("r-mean").textContent = +mean.toPrecision(6);
+    document.getElementById("r-sd").textContent = +Math.sqrt(varPop).toPrecision(6);
+}
+</script>{% endblock %}

@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Tip Calculator — CalcHub{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="/">Home</a><span class="sep">/</span><a href="/utility">Utility</a><span class="sep">/</span><span class="current">Tip Calculator</span></div>
+<div class="page-header"><h1>Tip Calculator</h1><p>Tip amount, total bill, and per-person split</p></div>
+<div class="calc-layout">
+<div class="calc-form">
+    <h2>Enter Details</h2>
+    <div class="field"><label for="bill">Bill Amount <span class="field-value"></span></label><div class="input-wrap"><span class="prefix">₹</span><input type="number" id="bill" class="has-prefix" value="1200" step="any"></div></div>
+    <div class="field"><label for="tip">Tip Percentage <span class="field-value"></span></label><div class="input-wrap"><input type="number" id="tip" value="15" step="1"><span class="suffix">%</span></div><input type="range" id="tip_r" min="0" max="50" step="1" value="15"></div>
+    <div class="field"><label for="people">Number of People <span class="field-value"></span></label><input type="number" id="people" value="2" min="1"><input type="range" id="people_r" min="1" max="20" step="1" value="2"></div>
+    <button class="btn btn-primary" onclick="calculate()">Calculate</button>
+</div>
+<div class="calc-results">
+    <h2>Results</h2>
+    <div id="results-placeholder" class="results-placeholder"><div class="icon">🍽️</div><p>Enter bill details and click Calculate.</p></div>
+    <div id="results" style="display:none;">
+        <div class="result-hero"><div class="label">Total Bill (with tip)</div><div class="value" id="r-total"></div></div>
+        <div class="result-stats">
+            <div class="stat-card green"><div class="label">Tip Amount</div><div class="value" id="r-tip"></div></div>
+            <div class="stat-card blue"><div class="label">Per Person</div><div class="value" id="r-per"></div></div>
+            <div class="stat-card"><div class="label">Tip per Person</div><div class="value" id="r-tip-pp"></div></div>
+        </div>
+    </div>
+</div>
+</div>
+{% endblock %}
+{% block scripts %}<script>
+syncSlider("tip_r","tip","","% tip");
+syncSlider("people_r","people","","people");
+function calculate() {
+    const bill=+document.getElementById("bill").value, tip=+document.getElementById("tip").value, n=+document.getElementById("people").value;
+    const tipAmt=bill*tip/100, total=bill+tipAmt, perPerson=total/n, tipPP=tipAmt/n;
+    showResults("results");
+    const fmt=v=>"₹"+v.toLocaleString("en-IN",{maximumFractionDigits:2});
+    document.getElementById("r-total").textContent=fmt(total);
+    document.getElementById("r-tip").textContent=fmt(tipAmt);
+    document.getElementById("r-per").textContent=fmt(perPerson);
+    document.getElementById("r-tip-pp").textContent=fmt(tipPP);
+}
+</script>{% endblock %}

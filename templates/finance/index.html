@@ -12,75 +12,127 @@
     </div>
 </div>
 
-<div class="section-label">Investments</div>
-<div class="calc-grid">
-    <a href="/finance/sip" class="calc-card">
-        <div class="icon" style="background:var(--green-light); color:var(--green);">📈</div>
-        <h3>SIP Calculator</h3>
-        <p>See how a fixed monthly SIP compounds over time.</p>
-        <div class="arrow">Calculate →</div>
-    </a>
-    <a href="/finance/sip-stepup" class="calc-card">
-        <div class="icon" style="background:var(--orange-light); color:var(--orange);">🚀</div>
-        <h3>SIP Step-Up</h3>
-        <p>SIP with annual increase — accelerate wealth creation.</p>
-        <div class="arrow">Calculate →</div>
-    </a>
-    <a href="/finance/sip-stepup-lumpsum" class="calc-card">
-        <div class="icon" style="background:var(--purple-light); color:var(--purple);">💰</div>
-        <h3>SIP Step-Up + Lumpsum</h3>
-        <p>Combine a lumpsum with an annually increasing SIP.</p>
-        <div class="arrow">Calculate →</div>
-    </a>
-    <a href="/finance/lumpsum" class="calc-card">
-        <div class="icon" style="background:var(--blue-light); color:var(--blue);">💎</div>
-        <h3>Lumpsum Calculator</h3>
-        <p>One-time investment growth with compounding returns.</p>
-        <div class="arrow">Calculate →</div>
-    </a>
-    <a href="/finance/fd" class="calc-card">
-        <div class="icon" style="background:#fefce8; color:#ca8a04;">🏧</div>
-        <h3>FD Calculator</h3>
-        <p>Fixed deposit maturity with quarterly/monthly compounding.</p>
-        <div class="arrow">Calculate →</div>
-    </a>
-    <a href="/finance/ppf" class="calc-card">
-        <div class="icon" style="background:var(--accent-light); color:var(--accent);">🏛️</div>
-        <h3>PPF Calculator</h3>
-        <p>Public Provident Fund — 15 year tax-free government scheme.</p>
-        <div class="arrow">Calculate →</div>
-    </a>
+<div class="seg-tabs">
+    <div class="seg-tab active" data-pane="primary">Primary</div>
+    <div class="seg-tab" data-pane="derived">Derived</div>
 </div>
 
-<div class="section-label">Loans</div>
-<div class="calc-grid">
-    <a href="/finance/emi" class="calc-card">
-        <div class="icon" style="background:var(--red-light); color:var(--red);">🏠</div>
-        <h3>EMI Calculator</h3>
-        <p>Home loan, car loan, personal loan — calculate your monthly EMI.</p>
-        <div class="arrow">Calculate →</div>
-    </a>
-</div>
+<!-- ── Primary pane ── -->
+<div id="pane-primary" class="calc-pane active">
 
-<div class="section-label">Employment & Retirement</div>
-<div class="calc-grid">
-    <a href="/finance/pf" class="calc-card">
-        <div class="icon" style="background:var(--accent-light); color:var(--accent);">🏦</div>
-        <h3>PF Calculator</h3>
-        <p>EPF maturity with employer match, interest, and annual increments.</p>
-        <div class="arrow">Calculate →</div>
-    </a>
-    <a href="/finance/gratuity" class="calc-card">
-        <div class="icon" style="background:#fefce8; color:#ca8a04;">🏅</div>
-        <h3>Gratuity Calculator</h3>
-        <p>Gratuity as per Payment of Gratuity Act with tax exemption.</p>
-        <div class="arrow">Calculate →</div>
-    </a>
-    <a href="/finance/retirement" class="calc-card">
-        <div class="icon" style="background:var(--green-light); color:var(--green);">🌴</div>
-        <h3>Retirement Calculator</h3>
-        <p>How much corpus you need and how much to save monthly.</p>
-        <div class="arrow">Calculate →</div>
-    </a>
-</div>
+    <div class="section-label">Investments</div>
+    <div class="calc-grid">
+        <a href="/finance/sip" class="calc-card">
+            <div class="icon" style="background:var(--green-light); color:var(--green);">📈</div>
+            <h3>SIP Calculator</h3>
+            <p>See how a fixed monthly SIP compounds over time.</p>
+            <div class="arrow">Calculate →</div>
+        </a>
+        <a href="/finance/sip-stepup" class="calc-card">
+            <div class="icon" style="background:var(--orange-light); color:var(--orange);">🚀</div>
+            <h3>SIP Step-Up</h3>
+            <p>SIP with annual increase — accelerate wealth creation.</p>
+            <div class="arrow">Calculate →</div>
+        </a>
+        <a href="/finance/sip-stepup-lumpsum" class="calc-card">
+            <div class="icon" style="background:var(--purple-light); color:var(--purple);">💰</div>
+            <h3>SIP Step-Up + Lumpsum</h3>
+            <p>Combine a lumpsum with an annually increasing SIP.</p>
+            <div class="arrow">Calculate →</div>
+        </a>
+        <a href="/finance/lumpsum" class="calc-card">
+            <div class="icon" style="background:var(--blue-light); color:var(--blue);">💎</div>
+            <h3>Lumpsum Calculator</h3>
+            <p>One-time investment growth with compounding returns.</p>
+            <div class="arrow">Calculate →</div>
+        </a>
+        <a href="/finance/fd" class="calc-card">
+            <div class="icon" style="background:#fefce8; color:#ca8a04;">🏧</div>
+            <h3>FD Calculator</h3>
+            <p>Fixed deposit maturity with quarterly/monthly compounding.</p>
+            <div class="arrow">Calculate →</div>
+        </a>
+    </div>
+
+    <div class="section-label">Government Schemes</div>
+    <div class="calc-grid">
+        <a href="/finance/ppf" class="calc-card">
+            <div class="icon" style="background:var(--accent-light); color:var(--accent);">🏛️</div>
+            <h3>PPF Calculator</h3>
+            <p>Public Provident Fund — 15 year tax-free government scheme.</p>
+            <div class="arrow">Calculate →</div>
+        </a>
+    </div>
+
+    <div class="section-label">Loans</div>
+    <div class="calc-grid">
+        <a href="/finance/emi" class="calc-card">
+            <div class="icon" style="background:var(--red-light); color:var(--red);">🏠</div>
+            <h3>EMI Calculator</h3>
+            <p>Home loan, car loan, personal loan — calculate your monthly EMI.</p>
+            <div class="arrow">Calculate →</div>
+        </a>
+    </div>
+
+    <div class="section-label">Employment & Retirement</div>
+    <div class="calc-grid">
+        <a href="/finance/pf" class="calc-card">
+            <div class="icon" style="background:var(--accent-light); color:var(--accent);">🏦</div>
+            <h3>PF Calculator</h3>
+            <p>EPF maturity with employer match, interest, and annual increments.</p>
+            <div class="arrow">Calculate →</div>
+        </a>
+        <a href="/finance/gratuity" class="calc-card">
+            <div class="icon" style="background:#fefce8; color:#ca8a04;">🏅</div>
+            <h3>Gratuity Calculator</h3>
+            <p>Gratuity as per Payment of Gratuity Act with tax exemption.</p>
+            <div class="arrow">Calculate →</div>
+        </a>
+        <a href="/finance/retirement" class="calc-card">
+            <div class="icon" style="background:var(--green-light); color:var(--green);">🌴</div>
+            <h3>Retirement Calculator</h3>
+            <p>How much corpus you need and how much to save monthly.</p>
+            <div class="arrow">Calculate →</div>
+        </a>
+    </div>
+
+</div><!-- /pane-primary -->
+
+<!-- ── Derived pane ── -->
+<div id="pane-derived" class="calc-pane">
+    <p style="font-size:.82rem; color:var(--text-secondary); margin-bottom:1.25rem;">
+        Derived calculators auto-fill inputs from your previous calculations saved in this browser.
+    </p>
+
+    <div class="section-label">Retirement Planning</div>
+    <div class="calc-grid">
+        <a href="/finance/retirement-readiness" class="calc-card">
+            <div class="icon" style="background:var(--green-light); color:var(--green);">✅</div>
+            <h3>Retirement Readiness</h3>
+            <p>Score your retirement readiness — projected corpus vs your target.</p>
+            <div class="derived-uses">
+                <span class="uses-label">Uses:</span>
+                <span class="uses-chip">Retirement Calculator</span>
+                <span class="uses-chip">SIP Calculator</span>
+            </div>
+            <div class="arrow">Calculate →</div>
+        </a>
+    </div>
+
+    <div class="section-label">Investments</div>
+    <div class="calc-grid">
+        <a href="/finance/inflation-corpus" class="calc-card">
+            <div class="icon" style="background:var(--orange-light); color:var(--orange);">📉</div>
+            <h3>Inflation-adjusted Corpus</h3>
+            <p>Real purchasing power of your investment corpus after inflation.</p>
+            <div class="derived-uses">
+                <span class="uses-label">Uses:</span>
+                <span class="uses-chip">SIP Calculator</span>
+                <span class="uses-chip">Lumpsum Calculator</span>
+            </div>
+            <div class="arrow">Calculate →</div>
+        </a>
+    </div>
+
+</div><!-- /pane-derived -->
 {% endblock %}

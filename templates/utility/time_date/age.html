@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Age Calculator — CalcHub{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="/">Home</a><span class="sep">/</span><a href="/utility">Utility</a><span class="sep">/</span><span class="current">Age Calculator</span></div>
+<div class="page-header"><h1>Age Calculator</h1><p>Exact age in years, months, and days</p></div>
+<div class="calc-layout">
+<div class="calc-form">
+    <h2>Enter Details</h2>
+    <div class="field"><label for="dob">Date of Birth</label><input type="date" id="dob" style="width:100%;padding:.55rem .75rem;border:1.5px solid var(--border);border-radius:8px;font-size:.9rem;font-family:inherit;"></div>
+    <div class="field"><label for="ref">As of Date</label><input type="date" id="ref" style="width:100%;padding:.55rem .75rem;border:1.5px solid var(--border);border-radius:8px;font-size:.9rem;font-family:inherit;"></div>
+    <button class="btn btn-primary" onclick="calculate()">Calculate Age</button>
+</div>
+<div class="calc-results">
+    <h2>Results</h2>
+    <div id="results-placeholder" class="results-placeholder"><div class="icon">🎂</div><p>Enter your date of birth.</p></div>
+    <div id="results" style="display:none;">
+        <div class="result-hero"><div class="label">Age</div><div class="value" id="r-age"></div></div>
+        <div class="result-stats">
+            <div class="stat-card"><div class="label">Total Months</div><div class="value" id="r-months"></div></div>
+            <div class="stat-card"><div class="label">Total Days</div><div class="value" id="r-days"></div></div>
+            <div class="stat-card green"><div class="label">Total Hours</div><div class="value" id="r-hours"></div></div>
+            <div class="stat-card blue"><div class="label">Next Birthday</div><div class="value" id="r-next"></div></div>
+        </div>
+    </div>
+</div>
+</div>
+{% endblock %}
+{% block scripts %}<script>
+document.getElementById("ref").value = new Date().toISOString().split("T")[0];
+document.getElementById("dob").value = "1995-01-01";
+
+function calculate() {
+    const dob = new Date(document.getElementById("dob").value);
+    const ref = new Date(document.getElementById("ref").value);
+    if (isNaN(dob) || isNaN(ref) || dob >= ref) return alert("Please enter valid dates (DOB must be before reference date).");
+    let yrs = ref.getFullYear() - dob.getFullYear();
+    let mos = ref.getMonth() - dob.getMonth();
+    let days = ref.getDate() - dob.getDate();
+    if (days < 0) { mos--; const prev = new Date(ref.getFullYear(), ref.getMonth(), 0); days += prev.getDate(); }
+    if (mos < 0) { yrs--; mos += 12; }
+    const totalDays = Math.floor((ref - dob) / 86400000);
+    const totalMonths = yrs * 12 + mos;
+    const next = new Date(dob); next.setFullYear(ref.getFullYear()); if (next <= ref) next.setFullYear(next.getFullYear() + 1);
+    const daysToNext = Math.ceil((next - ref) / 86400000);
+    showResults("results");
+    document.getElementById("r-age").textContent = `${yrs}y ${mos}m ${days}d`;
+    document.getElementById("r-months").textContent = totalMonths.toLocaleString();
+    document.getElementById("r-days").textContent = totalDays.toLocaleString();
+    document.getElementById("r-hours").textContent = (totalDays * 24).toLocaleString();
+    document.getElementById("r-next").textContent = daysToNext + " days away";
+}
+</script>{% endblock %}

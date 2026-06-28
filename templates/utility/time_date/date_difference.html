@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Date Difference — CalcHub{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="/">Home</a><span class="sep">/</span><a href="/utility">Utility</a><span class="sep">/</span><span class="current">Date Difference</span></div>
+<div class="page-header"><h1>Date Difference Calculator</h1><p>Days, weeks, and months between any two dates</p></div>
+<div class="calc-layout">
+<div class="calc-form">
+    <h2>Enter Dates</h2>
+    <div class="field-row">
+        <div class="field"><label for="d1">Start Date</label><input type="date" id="d1" style="width:100%;padding:.55rem .75rem;border:1.5px solid var(--border);border-radius:8px;font-size:.9rem;font-family:inherit;"></div>
+        <div class="field"><label for="d2">End Date</label><input type="date" id="d2" style="width:100%;padding:.55rem .75rem;border:1.5px solid var(--border);border-radius:8px;font-size:.9rem;font-family:inherit;"></div>
+    </div>
+    <button class="btn btn-primary" onclick="calculate()">Calculate Difference</button>
+</div>
+<div class="calc-results">
+    <h2>Results</h2>
+    <div id="results-placeholder" class="results-placeholder"><div class="icon">📅</div><p>Select two dates and click Calculate.</p></div>
+    <div id="results" style="display:none;">
+        <div class="result-hero"><div class="label">Difference</div><div class="value" id="r-main"></div></div>
+        <div class="result-stats">
+            <div class="stat-card"><div class="label">Total Days</div><div class="value" id="r-days"></div></div>
+            <div class="stat-card blue"><div class="label">Total Weeks</div><div class="value" id="r-weeks"></div></div>
+            <div class="stat-card green"><div class="label">Total Months (approx)</div><div class="value" id="r-months"></div></div>
+            <div class="stat-card orange"><div class="label">Total Hours</div><div class="value" id="r-hours"></div></div>
+        </div>
+    </div>
+</div>
+</div>
+{% endblock %}
+{% block scripts %}<script>
+const today = new Date().toISOString().split("T")[0];
+document.getElementById("d1").value = today;
+document.getElementById("d2").value = today;
+
+function calculate() {
+    const d1 = new Date(document.getElementById("d1").value);
+    const d2 = new Date(document.getElementById("d2").value);
+    if (isNaN(d1) || isNaN(d2)) return alert("Please enter valid dates.");
+    const diff = Math.abs(d2 - d1);
+    const days = Math.floor(diff / 86400000);
+    const weeks = Math.floor(days / 7);
+    const months = Math.floor(days / 30.44);
+    let yrs = Math.abs(d2.getFullYear() - d1.getFullYear());
+    let mos = Math.abs(d2.getMonth() - d1.getMonth());
+    let ds  = Math.abs(d2.getDate() - d1.getDate());
+    showResults("results");
+    document.getElementById("r-main").textContent = `${yrs}y ${mos}m ${ds}d`;
+    document.getElementById("r-days").textContent = days.toLocaleString();
+    document.getElementById("r-weeks").textContent = weeks.toLocaleString();
+    document.getElementById("r-months").textContent = months.toLocaleString();
+    document.getElementById("r-hours").textContent = (days * 24).toLocaleString();
+}
+</script>{% endblock %}

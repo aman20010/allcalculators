@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Countdown Calculator — CalcHub{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="/">Home</a><span class="sep">/</span><a href="/utility">Utility</a><span class="sep">/</span><span class="current">Countdown</span></div>
+<div class="page-header"><h1>Countdown Calculator</h1><p>Days, hours, and minutes until any future date</p></div>
+<div class="calc-layout">
+<div class="calc-form">
+    <h2>Enter Target</h2>
+    <div class="field"><label for="name">Event Name (optional)</label><input type="text" id="name" placeholder="e.g. New Year 2026"></div>
+    <div class="field"><label for="target">Target Date & Time</label><input type="datetime-local" id="target" style="width:100%;padding:.55rem .75rem;border:1.5px solid var(--border);border-radius:8px;font-size:.9rem;font-family:inherit;"></div>
+    <button class="btn btn-primary" onclick="calculate()">Start Countdown</button>
+</div>
+<div class="calc-results">
+    <h2>Results</h2>
+    <div id="results-placeholder" class="results-placeholder"><div class="icon">⏳</div><p>Pick a target date to count down to.</p></div>
+    <div id="results" style="display:none;">
+        <div class="result-hero"><div class="label" id="r-label">Countdown</div><div class="value" id="r-main"></div></div>
+        <div class="result-stats">
+            <div class="stat-card"><div class="label">Days</div><div class="value" id="r-days"></div></div>
+            <div class="stat-card blue"><div class="label">Hours</div><div class="value" id="r-hrs"></div></div>
+            <div class="stat-card green"><div class="label">Minutes</div><div class="value" id="r-min"></div></div>
+            <div class="stat-card orange"><div class="label">Seconds</div><div class="value" id="r-sec"></div></div>
+        </div>
+    </div>
+</div>
+</div>
+{% endblock %}
+{% block scripts %}<script>
+let timer;
+function calculate() {
+    clearInterval(timer);
+    const target = new Date(document.getElementById("target").value);
+    if (isNaN(target)) return alert("Please enter a valid date.");
+    const name = document.getElementById("name").value || "Target";
+    document.getElementById("r-label").textContent = "Until " + name;
+    showResults("results");
+    function tick() {
+        const now = new Date(); const diff = target - now;
+        if (diff <= 0) { clearInterval(timer); document.getElementById("r-main").textContent = "Reached!"; return; }
+        const d = Math.floor(diff/86400000), h = Math.floor((diff%86400000)/3600000), m = Math.floor((diff%3600000)/60000), s = Math.floor((diff%60000)/1000);
+        document.getElementById("r-main").textContent = `${d}d ${h}h ${m}m ${s}s`;
+        document.getElementById("r-days").textContent = d;
+        document.getElementById("r-hrs").textContent = h;
+        document.getElementById("r-min").textContent = m;
+        document.getElementById("r-sec").textContent = s;
+    }
+    tick(); timer = setInterval(tick, 1000);
+}
+const next = new Date(); next.setDate(next.getDate() + 30);
+document.getElementById("target").value = next.toISOString().slice(0,16);
+</script>{% endblock %}

@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% block title %}Protein Intake Calculator — CalcHub{% endblock %}
+{% block content %}
+<div class="breadcrumb">
+    <a href="/">Home</a><span class="sep">/</span><a href="/health">Health</a><span class="sep">/</span><span class="current">Protein Intake</span>
+</div>
+<div class="page-header">
+    <h1>Protein Intake Calculator</h1>
+    <p>Daily protein target based on lean mass, goal, and activity level</p>
+</div>
+<div class="calc-layout">
+    <div class="calc-form">
+        <h2>Enter Details</h2>
+        <div id="prereq-banner"></div>
+        <div class="field">
+            <label for="weight">Body Weight <span class="field-value"></span></label>
+            <div class="input-wrap"><input type="number" id="weight" value="75" min="20" max="300" step="0.5"><span class="suffix">kg</span></div>
+            <input type="range" id="weight_r" min="30" max="180" step="0.5" value="75">
+        </div>
+        <div class="field">
+            <label for="bf">Body Fat % <span class="field-value"></span>
+                <span style="font-weight:400; font-size:.7rem; color:var(--text-muted);">(optional — improves accuracy)</span>
+            </label>
+            <div class="input-wrap"><input type="number" id="bf" value="" min="3" max="60" step="0.5" placeholder="e.g. 15"><span class="suffix">%</span></div>
+        </div>
+        <div class="field">
+            <label for="goal">Goal</label>
+            <select id="goal">
+                <option value="maintain">Maintain weight</option>
+                <option value="lose">Lose fat</option>
+                <option value="gain">Build muscle</option>
+            </select>
+        </div>
+        <div class="field">
+            <label for="activity">Activity Level</label>
+            <select id="activity">
+                <option value="sedentary">Sedentary (desk job, no exercise)</option>
+                <option value="light">Lightly Active (1–3 days/week)</option>
+                <option value="moderate" selected>Moderately Active (3–5 days/week)</option>
+                <option value="active">Very Active (6–7 days/week)</option>
+                <option value="very_active">Extremely Active (athlete/physical job)</option>
+            </select>
+        </div>
+        <button class="btn btn-primary" onclick="calculate()">Calculate Protein Target</button>
+    </div>
+    <div class="calc-results">
+        <h2>Results</h2>
+        <div id="results-placeholder" class="results-placeholder">
+            <div class="icon">🥩</div>
+            <p>Enter your details and click Calculate.</p>
+        </div>
+        <div id="results" style="display:none;">
+            <div class="result-hero">
+                <div class="label">Daily Protein Target</div>
+                <div class="value" id="r-total"></div>
+                <div class="sub" id="r-lean"></div>
+            </div>
+            <div class="result-stats">
+                <div class="stat-card green"><div class="label">Per Meal (3 meals)</div><div class="value" id="r-3meal"></div></div>
+                <div class="stat-card blue"><div class="label">Per Meal (4 meals)</div><div class="value" id="r-4meal"></div></div>
+                <div class="stat-card orange"><div class="label">Per Meal (5 meals)</div><div class="value" id="r-5meal"></div></div>
+                <div class="stat-card"><div class="label">g per kg lean mass</div><div class="value" id="r-mult"></div></div>
+            </div>
+            <div class="info-box">
+                <strong>How it works:</strong> Protein is calculated from lean mass (total weight minus fat), not total body weight — this gives a more accurate target.<br>
+                <span style="font-size:.75rem; color:var(--text-muted);">Higher goals (fat loss, muscle gain) use higher multipliers to preserve or build lean tissue.</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+syncSlider("weight_r","weight","","kg");
+
+(function prefillFromStorage() {
+    const bmr = loadCalcResult('bmrTdee');
+    const bf = loadCalcResult('bodyFat');
+    document.getElementById('prereq-banner').innerHTML = prereqBannerHTML([
+        { key: 'bmrTdee', name: 'BMR & TDEE Calculator', url: '/health/bmr-tdee' },
+        { key: 'bodyFat', name: 'Body Fat % Calculator', url: '/health/body-fat' },
+    ]);
+    if (bmr) {
+        prefillField('weight', bmr.weight_kg);
+        if (bmr.activity_level) document.getElementById('activity').value = bmr.activity_level;
+    }
+    if (bf) {
+        if (!bmr) prefillField('weight', bf.weight_kg);
+        prefillField('bf', bf.body_fat_percent);
+    }
+})();
+
+async function calculate() {
+    const bfVal = document.getElementById("bf").value;
+    const data = {
+        weight_kg: +document.getElementById("weight").value,
+        goal: document.getElementById("goal").value,
+        activity_level: document.getElementById("activity").value,
+        body_fat_percent: bfVal ? +bfVal : null,
+    };
+    const res = await postCalc("/health/api/protein-intake", data);
+    if (res.status !== "success") return alert(res.message);
+    const d = res.data;
+    showResults("results");
+    document.getElementById("r-total").textContent = Math.round(d.protein_g_per_day) + "g / day";
+    document.getElementById("r-lean").textContent = "Based on " + d.lean_mass_kg + " kg lean mass";
+    document.getElementById("r-3meal").textContent = Math.round(d.protein_per_meal_3) + "g";
+    document.getElementById("r-4meal").textContent = Math.round(d.protein_per_meal_4) + "g";
+    document.getElementById("r-5meal").textContent = Math.round(d.protein_per_meal_5) + "g";
+    document.getElementById("r-mult").textContent = d.multiplier_g_per_kg_lean + "g";
+    saveCalcResult('proteinIntake', { protein_g_per_day: d.protein_g_per_day, lean_mass_kg: d.lean_mass_kg });
+}
+</script>
+{% endblock %}
