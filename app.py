@@ -1,12 +1,14 @@
 from flask import Flask, render_template
 from calculators.finance.routes import finance_bp
 from calculators.health.routes import health_bp
+from calculators.utility.routes import utility_bp
 
 
 def create_app():
     app = Flask(__name__)
     app.register_blueprint(finance_bp)
     app.register_blueprint(health_bp)
+    app.register_blueprint(utility_bp)
 
     @app.route("/")
     def home():

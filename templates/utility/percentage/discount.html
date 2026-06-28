@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Discount Calculator — CalcHub{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="/">Home</a><span class="sep">/</span><a href="/utility">Utility</a><span class="sep">/</span><span class="current">Discount</span></div>
+<div class="page-header"><h1>Discount Calculator</h1><p>Sale price, savings amount, and final price after discount</p></div>
+<div class="calc-layout">
+<div class="calc-form">
+    <h2>Enter Values</h2>
+    <div class="field"><label for="orig">Original Price</label><div class="input-wrap"><span class="prefix">₹</span><input type="number" id="orig" class="has-prefix" value="1999" step="any"></div></div>
+    <div class="field"><label for="disc">Discount (%)</label><div class="input-wrap"><input type="number" id="disc" value="20" step="any"><span class="suffix">%</span></div><input type="range" id="disc_r" min="0" max="100" step="1" value="20"></div>
+    <button class="btn btn-primary" onclick="calculate()">Calculate</button>
+</div>
+<div class="calc-results">
+    <h2>Results</h2>
+    <div id="results-placeholder" class="results-placeholder"><div class="icon">🏷️</div><p>Enter price and discount.</p></div>
+    <div id="results" style="display:none;">
+        <div class="result-hero" style="background:linear-gradient(135deg,var(--green-light),#d1fae5);"><div class="label" style="color:var(--green);">Sale Price</div><div class="value" style="color:var(--green);" id="r-sale"></div></div>
+        <div class="result-stats">
+            <div class="stat-card"><div class="label">Original Price</div><div class="value" id="r-orig"></div></div>
+            <div class="stat-card green"><div class="label">You Save</div><div class="value" id="r-save"></div></div>
+        </div>
+    </div>
+</div>
+</div>
+{% endblock %}
+{% block scripts %}<script>
+syncSlider("disc_r","disc","","% off");
+function calculate() {
+    const orig=+document.getElementById("orig").value, d=+document.getElementById("disc").value;
+    const save=orig*d/100, sale=orig-save;
+    showResults("results");
+    document.getElementById("r-sale").textContent = "₹" + sale.toLocaleString("en-IN",{maximumFractionDigits:2});
+    document.getElementById("r-orig").textContent = "₹" + orig.toLocaleString("en-IN",{maximumFractionDigits:2});
+    document.getElementById("r-save").textContent = "₹" + save.toLocaleString("en-IN",{maximumFractionDigits:2});
+}
+</script>{% endblock %}

@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block title %}Lean Body Mass Calculator — CalcHub{% endblock %}
+{% block content %}
+<div class="breadcrumb">
+    <a href="/">Home</a><span class="sep">/</span><a href="/health">Health</a><span class="sep">/</span><span class="current">Lean Body Mass</span>
+</div>
+<div class="page-header">
+    <h1>Lean Body Mass Calculator</h1>
+    <p>Cross-validate your lean mass using Body Fat %, Boer, and James formulas</p>
+</div>
+<div class="calc-layout">
+    <div class="calc-form">
+        <h2>Enter Details</h2>
+        <div id="prereq-banner"></div>
+        <div class="field">
+            <label>Gender</label>
+            <div class="toggle-group">
+                <input type="radio" name="gender" id="g_male" value="male" checked>
+                <label for="g_male">Male</label>
+                <input type="radio" name="gender" id="g_female" value="female">
+                <label for="g_female">Female</label>
+            </div>
+        </div>
+        <div class="field-row">
+            <div class="field">
+                <label for="weight">Weight <span class="field-value"></span></label>
+                <div class="input-wrap"><input type="number" id="weight" value="75" min="20" max="300" step="0.5"><span class="suffix">kg</span></div>
+            </div>
+            <div class="field">
+                <label for="height">Height <span class="field-value"></span></label>
+                <div class="input-wrap"><input type="number" id="height" value="175" min="100" max="250"><span class="suffix">cm</span></div>
+            </div>
+        </div>
+        <div class="field">
+            <label for="bf">Body Fat % <span class="field-value"></span></label>
+            <div class="input-wrap"><input type="number" id="bf" value="15" min="3" max="60" step="0.5"><span class="suffix">%</span></div>
+            <input type="range" id="bf_r" min="3" max="50" step="0.5" value="15">
+        </div>
+        <button class="btn btn-primary" onclick="calculate()">Calculate Lean Mass</button>
+    </div>
+    <div class="calc-results">
+        <h2>Results</h2>
+        <div id="results-placeholder" class="results-placeholder">
+            <div class="icon">🏋️</div>
+            <p>Enter your details and click Calculate.</p>
+        </div>
+        <div id="results" style="display:none;">
+            <div class="result-hero">
+                <div class="label">Lean Body Mass (Body Fat method)</div>
+                <div class="value" id="r-lean"></div>
+            </div>
+            <div class="result-stats">
+                <div class="stat-card orange"><div class="label">Fat Mass</div><div class="value" id="r-fat"></div></div>
+                <div class="stat-card green"><div class="label">Boer Formula</div><div class="value" id="r-boer"></div></div>
+                <div class="stat-card blue"><div class="label">James Formula</div><div class="value" id="r-james"></div></div>
+                <div class="stat-card purple"><div class="label">Average (3 methods)</div><div class="value" id="r-avg"></div></div>
+            </div>
+            <div class="info-box">
+                <strong>Three-formula average</strong> gives the most reliable estimate.<br>
+                <span style="font-size:.75rem; color:var(--text-muted);">Boer and James formulas use height and weight only; the Body Fat method uses your BF%.</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+syncSlider("bf_r","bf","","% BF");
+
+(function prefillFromStorage() {
+    const bf = loadCalcResult('bodyFat');
+    document.getElementById('prereq-banner').innerHTML = prereqBannerHTML([
+        { key: 'bodyFat', name: 'Body Fat % Calculator', url: '/health/body-fat' },
+    ]);
+    if (bf) {
+        prefillField('bf', bf.body_fat_percent);
+        prefillField('weight', bf.weight_kg);
+        if (bf.height_cm) prefillField('height', bf.height_cm);
+        if (bf.gender) {
+            document.getElementById(bf.gender === 'female' ? 'g_female' : 'g_male').checked = true;
+        }
+    }
+})();
+
+async function calculate() {
+    const data = {
+        weight_kg: +document.getElementById("weight").value,
+        height_cm: +document.getElementById("height").value,
+        body_fat_percent: +document.getElementById("bf").value,
+        gender: document.getElementById("g_male").checked ? "male" : "female",
+    };
+    const res = await postCalc("/health/api/lean-body-mass", data);
+    if (res.status !== "success") return alert(res.message);
+    const d = res.data;
+    showResults("results");
+    document.getElementById("r-lean").textContent = d.lean_body_mass_kg + " kg";
+    document.getElementById("r-fat").textContent = d.fat_mass_kg + " kg";
+    document.getElementById("r-boer").textContent = (d.lean_boer_kg || "—") + (d.lean_boer_kg ? " kg" : "");
+    document.getElementById("r-james").textContent = (d.lean_james_kg || "—") + (d.lean_james_kg ? " kg" : "");
+    document.getElementById("r-avg").textContent = (d.average_lean_kg || d.lean_body_mass_kg) + " kg";
+    saveCalcResult('leanBodyMass', { lean_body_mass_kg: d.lean_body_mass_kg, fat_mass_kg: d.fat_mass_kg });
+}
+</script>
+{% endblock %}

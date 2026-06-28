@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block title %}Inflation-adjusted Corpus — CalcHub{% endblock %}
+{% block content %}
+<div class="breadcrumb">
+    <a href="/">Home</a><span class="sep">/</span><a href="/finance">Finance</a><span class="sep">/</span><span class="current">Inflation-adjusted Corpus</span>
+</div>
+<div class="page-header">
+    <h1>Inflation-adjusted Corpus</h1>
+    <p>What is your investment corpus worth in today's money after inflation?</p>
+</div>
+<div class="calc-layout">
+    <div class="calc-form">
+        <h2>Enter Details</h2>
+        <div id="prereq-banner"></div>
+        <div class="field">
+            <label for="corpus">Investment Corpus (Future Value) <span class="field-value"></span></label>
+            <div class="input-wrap"><span class="prefix">₹</span><input type="number" id="corpus" class="has-prefix" value="10000000" min="1000"></div>
+            <input type="range" id="corpus_r" min="100000" max="200000000" step="100000" value="10000000">
+        </div>
+        <div class="field">
+            <label for="years">Time Period <span class="field-value"></span></label>
+            <input type="number" id="years" value="20" min="1" max="50">
+            <input type="range" id="years_r" min="1" max="50" step="1" value="20">
+        </div>
+        <div class="field">
+            <label for="inflation">Annual Inflation Rate <span class="field-value"></span></label>
+            <div class="input-wrap"><input type="number" id="inflation" value="6" min="0" max="20" step="0.5"><span class="suffix">% p.a.</span></div>
+            <input type="range" id="inflation_r" min="1" max="15" step="0.5" value="6">
+        </div>
+        <button class="btn btn-primary" onclick="calculate()">Calculate Real Value</button>
+    </div>
+    <div class="calc-results">
+        <h2>Results</h2>
+        <div id="results-placeholder" class="results-placeholder">
+            <div class="icon">📉</div>
+            <p>Enter corpus details and click Calculate.</p>
+        </div>
+        <div id="results" style="display:none;">
+            <div class="result-hero" style="background:linear-gradient(135deg,var(--orange-light),#fde68a30);">
+                <div class="label" style="color:var(--orange);">Real Value (Today's Money)</div>
+                <div class="value" style="color:var(--orange);" id="r-real"></div>
+                <div class="sub" id="r-sub"></div>
+            </div>
+            <div class="result-stats">
+                <div class="stat-card"><div class="label">Nominal Corpus</div><div class="value" id="r-nominal"></div></div>
+                <div class="stat-card red"><div class="label">Purchasing Power Lost</div><div class="value" id="r-loss"></div></div>
+                <div class="stat-card orange"><div class="label">Loss %</div><div class="value" id="r-loss-pct"></div></div>
+                <div class="stat-card"><div class="label">Price Level Multiplier</div><div class="value" id="r-mult"></div></div>
+            </div>
+            <div class="info-box">
+                <strong>What this means:</strong> Your nominal corpus (the number on paper) is worth significantly less in real terms.<br>
+                <span style="font-size:.75rem; color:var(--text-muted);">Price level multiplier shows how much prices will rise over the period. A ₹1 item today will cost ₹<span id="r-mult-inline">?</span> by then.</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+syncSlider("corpus_r","corpus","₹","");
+syncSlider("years_r","years","","yrs");
+syncSlider("inflation_r","inflation","","% p.a.");
+
+(function prefillFromStorage() {
+    const sip = loadCalcResult('sip');
+    const lump = loadCalcResult('lumpsum');
+    document.getElementById('prereq-banner').innerHTML = prereqBannerHTML([
+        { key: 'sip', name: 'SIP Calculator', url: '/finance/sip' },
+        { key: 'lumpsum', name: 'Lumpsum Calculator', url: '/finance/lumpsum' },
+    ]);
+    if (sip) {
+        prefillField('corpus', Math.round(sip.total_value));
+        if (sip.time_years) prefillField('years', sip.time_years);
+    } else if (lump) {
+        prefillField('corpus', Math.round(lump.total_value));
+        if (lump.time_years) prefillField('years', lump.time_years);
+    }
+})();
+
+async function calculate() {
+    const data = {
+        corpus: +document.getElementById("corpus").value,
+        years: +document.getElementById("years").value,
+        inflation_rate: +document.getElementById("inflation").value,
+    };
+    const res = await postCalc("/finance/api/inflation-corpus", data);
+    if (res.status !== "success") return alert(res.message);
+    const d = res.data;
+    showResults("results");
+    document.getElementById("r-real").textContent = formatLakhsCr(d.real_corpus);
+    document.getElementById("r-sub").textContent = "out of a nominal " + formatLakhsCr(d.nominal_corpus);
+    document.getElementById("r-nominal").textContent = formatLakhsCr(d.nominal_corpus);
+    document.getElementById("r-loss").textContent = formatLakhsCr(d.purchasing_power_loss);
+    document.getElementById("r-loss-pct").textContent = d.loss_percent + "%";
+    document.getElementById("r-mult").textContent = d.price_level_multiplier + "×";
+    document.getElementById("r-mult-inline").textContent = d.price_level_multiplier;
+    saveCalcResult('inflationCorpus', { real_corpus: d.real_corpus, nominal_corpus: d.nominal_corpus, loss_percent: d.loss_percent });
+}
+</script>
+{% endblock %}

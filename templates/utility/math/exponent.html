@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Exponent Calculator — CalcHub{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="/">Home</a><span class="sep">/</span><a href="/utility">Utility</a><span class="sep">/</span><span class="current">Exponent</span></div>
+<div class="page-header"><h1>Exponent Calculator</h1><p>Compute base raised to any power (bⁿ)</p></div>
+<div class="calc-layout">
+<div class="calc-form">
+    <h2>Enter Values</h2>
+    <div class="field-row">
+        <div class="field"><label for="base">Base (b)</label><input type="number" id="base" value="2" step="any"></div>
+        <div class="field"><label for="exp">Exponent (n)</label><input type="number" id="exp" value="10" step="any"></div>
+    </div>
+    <button class="btn btn-primary" onclick="calculate()">Calculate</button>
+</div>
+<div class="calc-results">
+    <h2>Results</h2>
+    <div id="results-placeholder" class="results-placeholder"><div class="icon">xⁿ</div><p>Enter base and exponent.</p></div>
+    <div id="results" style="display:none;">
+        <div class="result-hero"><div class="label" id="r-lbl">Result</div><div class="value" id="r-val"></div></div>
+        <div class="result-stats">
+            <div class="stat-card"><div class="label">Scientific</div><div class="value" id="r-sci"></div></div>
+            <div class="stat-card blue"><div class="label">log₁₀ of result</div><div class="value" id="r-log"></div></div>
+        </div>
+    </div>
+</div>
+</div>
+{% endblock %}
+{% block scripts %}<script>
+function calculate() {
+    const b=+document.getElementById("base").value, n=+document.getElementById("exp").value;
+    const r = Math.pow(b,n);
+    showResults("results");
+    document.getElementById("r-lbl").textContent = `${b}^${n}`;
+    document.getElementById("r-val").textContent = isFinite(r) ? +r.toPrecision(8) : (r>0?"∞":"-∞");
+    document.getElementById("r-sci").textContent = isFinite(r) ? r.toExponential(4) : "—";
+    document.getElementById("r-log").textContent = r > 0 ? +Math.log10(r).toPrecision(6) : "undefined";
+}
+</script>{% endblock %}

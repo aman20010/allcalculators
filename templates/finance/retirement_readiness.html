@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% block title %}Retirement Readiness — CalcHub{% endblock %}
+{% block content %}
+<div class="breadcrumb">
+    <a href="/">Home</a><span class="sep">/</span><a href="/finance">Finance</a><span class="sep">/</span><span class="current">Retirement Readiness</span>
+</div>
+<div class="page-header">
+    <h1>Retirement Readiness Score</h1>
+    <p>How on-track is your projected corpus vs what you actually need?</p>
+</div>
+<div class="calc-layout">
+    <div class="calc-form">
+        <h2>Enter Details</h2>
+        <div id="prereq-banner"></div>
+        <div class="field">
+            <label for="corpus_needed">Retirement Corpus Needed <span class="field-value"></span></label>
+            <div class="input-wrap"><span class="prefix">₹</span><input type="number" id="corpus_needed" class="has-prefix" value="30000000" min="100000"></div>
+            <input type="range" id="corpus_needed_r" min="1000000" max="200000000" step="500000" value="30000000">
+        </div>
+        <div class="field">
+            <label for="projected_corpus">Projected Corpus (your SIP/investments) <span class="field-value"></span></label>
+            <div class="input-wrap"><span class="prefix">₹</span><input type="number" id="projected_corpus" class="has-prefix" value="20000000" min="0"></div>
+            <input type="range" id="projected_corpus_r" min="0" max="200000000" step="500000" value="20000000">
+        </div>
+        <div class="field">
+            <label for="years_to_retire">Years to Retirement <span class="field-value"></span></label>
+            <input type="number" id="years_to_retire" value="30" min="1" max="50">
+            <input type="range" id="years_to_retire_r" min="1" max="50" step="1" value="30">
+        </div>
+        <button class="btn btn-primary" onclick="calculate()">Calculate Readiness Score</button>
+    </div>
+    <div class="calc-results">
+        <h2>Results</h2>
+        <div id="results-placeholder" class="results-placeholder">
+            <div class="icon">✅</div>
+            <p>Enter your details and click Calculate.</p>
+        </div>
+        <div id="results" style="display:none;">
+            <div class="result-hero" id="r-hero">
+                <div class="label">Readiness Score</div>
+                <div class="value" id="r-score"></div>
+                <div class="sub" id="r-status"></div>
+            </div>
+            <div class="readiness-bar-wrap" style="margin-bottom:1rem;">
+                <div class="readiness-bar" id="r-bar" style="width:0%"></div>
+            </div>
+            <div id="r-message" class="info-box" style="margin-bottom:1rem;"></div>
+            <div class="result-stats">
+                <div class="stat-card"><div class="label">Corpus Needed</div><div class="value" id="r-needed"></div></div>
+                <div class="stat-card"><div class="label">Projected Corpus</div><div class="value" id="r-projected"></div></div>
+                <div class="stat-card red"><div class="label">Shortfall</div><div class="value" id="r-shortfall"></div></div>
+                <div class="stat-card orange"><div class="label">Extra Monthly SIP Needed</div><div class="value" id="r-extra"></div></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+syncSlider("corpus_needed_r","corpus_needed","₹","");
+syncSlider("projected_corpus_r","projected_corpus","₹","");
+syncSlider("years_to_retire_r","years_to_retire","","yrs");
+
+(function prefillFromStorage() {
+    const ret = loadCalcResult('retirement');
+    const sip = loadCalcResult('sip');
+    document.getElementById('prereq-banner').innerHTML = prereqBannerHTML([
+        { key: 'retirement', name: 'Retirement Calculator', url: '/finance/retirement' },
+        { key: 'sip', name: 'SIP Calculator', url: '/finance/sip' },
+    ]);
+    if (ret) {
+        prefillField('corpus_needed', Math.round(ret.corpus_needed));
+        if (ret.years_to_retire) prefillField('years_to_retire', ret.years_to_retire);
+    }
+    if (sip) {
+        prefillField('projected_corpus', Math.round(sip.total_value));
+    }
+})();
+
+const colorMap = { green: 'var(--green)', orange: 'var(--orange)', red: 'var(--red)' };
+const bgMap    = { green: 'var(--green-light)', orange: 'var(--orange-light)', red: 'var(--red-light)' };
+
+async function calculate() {
+    const data = {
+        corpus_needed: +document.getElementById("corpus_needed").value,
+        projected_corpus: +document.getElementById("projected_corpus").value,
+        years_to_retire: +document.getElementById("years_to_retire").value,
+    };
+    const res = await postCalc("/finance/api/retirement-readiness", data);
+    if (res.status !== "success") return alert(res.message);
+    const d = res.data;
+    showResults("results");
+
+    const c = colorMap[d.color] || 'var(--accent)';
+    const bg = bgMap[d.color] || 'var(--accent-light)';
+    const hero = document.getElementById("r-hero");
+    hero.style.background = `linear-gradient(135deg, ${bg}, ${bg})`;
+    hero.querySelector(".value").style.color = c;
+    hero.querySelector(".label").style.color = c;
+
+    document.getElementById("r-score").textContent = d.readiness_score + "%";
+    document.getElementById("r-status").textContent = d.status;
+    document.getElementById("r-bar").style.width = Math.min(d.readiness_score, 100) + "%";
+    document.getElementById("r-bar").style.background = c;
+    document.getElementById("r-message").innerHTML = "<strong>" + d.status + ":</strong> " + d.message;
+    document.getElementById("r-needed").textContent = formatLakhsCr(d.corpus_needed);
+    document.getElementById("r-projected").textContent = formatLakhsCr(d.projected_corpus);
+    document.getElementById("r-shortfall").textContent = d.shortfall > 0 ? formatLakhsCr(d.shortfall) : "None";
+    document.getElementById("r-extra").textContent = d.extra_monthly_needed > 0 ? formatINR(d.extra_monthly_needed) + "/mo" : "On track";
+
+    saveCalcResult('retirementReadiness', { readiness_score: d.readiness_score, status: d.status, shortfall: d.shortfall });
+}
+</script>
+{% endblock %}

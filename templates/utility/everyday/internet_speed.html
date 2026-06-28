@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Internet Speed Converter — CalcHub{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="/">Home</a><span class="sep">/</span><a href="/utility">Utility</a><span class="sep">/</span><span class="current">Internet Speed</span></div>
+<div class="page-header"><h1>Internet Speed Converter</h1><p>Convert between Mbps, MBps, Kbps, Gbps and more</p></div>
+<div class="calc-layout">
+<div class="calc-form">
+    <h2>Enter Speed</h2>
+    <div class="field-row">
+        <div class="field"><label for="val">Value</label><input type="number" id="val" value="100" step="any"></div>
+        <div class="field"><label for="unit">Unit</label>
+            <select id="unit" style="padding:.55rem .75rem;border:1.5px solid var(--border);border-radius:8px;font-size:.9rem;font-family:inherit;width:100%;">
+                <option value="mbps">Mbps (Megabits/s)</option>
+                <option value="mbps_byte">MBps (Megabytes/s)</option>
+                <option value="kbps">Kbps (Kilobits/s)</option>
+                <option value="gbps">Gbps (Gigabits/s)</option>
+                <option value="gbps_byte">GBps (Gigabytes/s)</option>
+            </select>
+        </div>
+    </div>
+    <button class="btn btn-primary" onclick="calculate()">Convert</button>
+</div>
+<div class="calc-results">
+    <h2>Results</h2>
+    <div id="results-placeholder" class="results-placeholder"><div class="icon">📶</div><p>Enter a speed value to convert.</p></div>
+    <div id="results" style="display:none;">
+        <div class="result-stats">
+            <div class="stat-card green"><div class="label">Mbps</div><div class="value" id="r-mbps"></div></div>
+            <div class="stat-card blue"><div class="label">MBps</div><div class="value" id="r-mbps-byte"></div></div>
+            <div class="stat-card"><div class="label">Kbps</div><div class="value" id="r-kbps"></div></div>
+            <div class="stat-card orange"><div class="label">Gbps</div><div class="value" id="r-gbps"></div></div>
+        </div>
+        <div class="info-box" id="r-dl-info"></div>
+    </div>
+</div>
+</div>
+{% endblock %}
+{% block scripts %}<script>
+// All conversions relative to Mbps
+const TO_MBPS={mbps:1, mbps_byte:8, kbps:0.001, gbps:1000, gbps_byte:8000};
+function calculate(){
+    const v=+document.getElementById("val").value, u=document.getElementById("unit").value;
+    if(!v)return alert("Enter a valid speed.");
+    const mbps=v*TO_MBPS[u];
+    showResults("results");
+    document.getElementById("r-mbps").textContent=+mbps.toPrecision(6)+" Mbps";
+    document.getElementById("r-mbps-byte").textContent=+(mbps/8).toPrecision(6)+" MBps";
+    document.getElementById("r-kbps").textContent=+( mbps*1000).toPrecision(6)+" Kbps";
+    document.getElementById("r-gbps").textContent=+(mbps/1000).toPrecision(6)+" Gbps";
+    const dlSec=mbps/8, dl1GB=1024/dlSec;
+    document.getElementById("r-dl-info").innerHTML=`At <strong>${+mbps.toPrecision(4)} Mbps</strong>: Download rate = <strong>${+dlSec.toPrecision(4)} MB/s</strong>. 1 GB file would take <strong>${dl1GB<60?dl1GB.toFixed(1)+" s":(dl1GB/60).toFixed(1)+" min"}</strong>.`;
+}
+</script>{% endblock %}

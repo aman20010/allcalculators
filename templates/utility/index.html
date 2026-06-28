@@ -1,0 +1,280 @@
+{% extends "base.html" %}
+{% block title %}Utility Calculators — CalcHub{% endblock %}
+{% block content %}
+<div class="breadcrumb">
+    <a href="/">Home</a><span class="sep">/</span><span class="current">Utility</span>
+</div>
+<div class="category-header">
+    <div class="category-icon" style="background:var(--purple-light); color:var(--purple);">⚡</div>
+    <div>
+        <h1 style="font-size:1.4rem;">Utility Calculators</h1>
+        <p style="color:var(--text-secondary); font-size:.85rem;">Time, percentages, unit conversions, maths, and everyday tools</p>
+    </div>
+</div>
+
+<div class="section-label">Time & Date</div>
+<div class="calc-grid">
+    <a href="/utility/age" class="calc-card">
+        <div class="icon" style="background:var(--blue-light);color:var(--blue);">🎂</div>
+        <h3>Age Calculator</h3>
+        <p>Exact age in years, months, and days from date of birth.</p>
+        <div class="arrow">Calculate →</div>
+    </a>
+    <a href="/utility/date-difference" class="calc-card">
+        <div class="icon" style="background:var(--accent-light);color:var(--accent);">📅</div>
+        <h3>Date Difference</h3>
+        <p>Days, weeks, and months between any two dates.</p>
+        <div class="arrow">Calculate →</div>
+    </a>
+    <a href="/utility/business-days" class="calc-card">
+        <div class="icon" style="background:var(--green-light);color:var(--green);">📆</div>
+        <h3>Business Days</h3>
+        <p>Working days between two dates, excluding weekends.</p>
+        <div class="arrow">Calculate →</div>
+    </a>
+    <a href="/utility/time-duration" class="calc-card">
+        <div class="icon" style="background:var(--orange-light);color:var(--orange);">⏱️</div>
+        <h3>Time Duration</h3>
+        <p>Duration between two times in hours, minutes, and seconds.</p>
+        <div class="arrow">Calculate →</div>
+    </a>
+    <a href="/utility/countdown" class="calc-card">
+        <div class="icon" style="background:var(--red-light);color:var(--red);">⏳</div>
+        <h3>Countdown Calculator</h3>
+        <p>Days, hours, and minutes until any future date.</p>
+        <div class="arrow">Calculate →</div>
+    </a>
+    <a href="/utility/day-of-week" class="calc-card">
+        <div class="icon" style="background:var(--purple-light);color:var(--purple);">🗓️</div>
+        <h3>Day of Week</h3>
+        <p>Find out what day of the week any date falls on.</p>
+        <div class="arrow">Calculate →</div>
+    </a>
+    <a href="/utility/leap-year" class="calc-card">
+        <div class="icon" style="background:#fefce8;color:#ca8a04;">🐸</div>
+        <h3>Leap Year Checker</h3>
+        <p>Is a given year a leap year? With the next few leap years.</p>
+        <div class="arrow">Check →</div>
+    </a>
+    <a href="/utility/time-zone" class="calc-card">
+        <div class="icon" style="background:var(--blue-light);color:var(--blue);">🌍</div>
+        <h3>Time Zone Converter</h3>
+        <p>Convert a time between the world's major time zones.</p>
+        <div class="arrow">Convert →</div>
+    </a>
+    <a href="/utility/unix-timestamp" class="calc-card">
+        <div class="icon" style="background:var(--accent-light);color:var(--accent);">🔢</div>
+        <h3>Unix Timestamp</h3>
+        <p>Convert between Unix timestamps and human-readable dates.</p>
+        <div class="arrow">Convert →</div>
+    </a>
+</div>
+
+<div class="section-label">Percentage</div>
+<div class="calc-grid">
+    <a href="/utility/percentage" class="calc-card">
+        <div class="icon" style="background:var(--green-light);color:var(--green);">%</div>
+        <h3>Percentage Calculator</h3>
+        <p>What is X% of Y? Find any part of a percentage equation.</p>
+        <div class="arrow">Calculate →</div>
+    </a>
+    <a href="/utility/percentage-increase" class="calc-card">
+        <div class="icon" style="background:var(--green-light);color:var(--green);">📈</div>
+        <h3>Percentage Increase</h3>
+        <p>Increase a number by a given percentage.</p>
+        <div class="arrow">Calculate →</div>
+    </a>
+    <a href="/utility/percentage-decrease" class="calc-card">
+        <div class="icon" style="background:var(--red-light);color:var(--red);">📉</div>
+        <h3>Percentage Decrease</h3>
+        <p>Decrease a number by a given percentage.</p>
+        <div class="arrow">Calculate →</div>
+    </a>
+    <a href="/utility/percentage-difference" class="calc-card">
+        <div class="icon" style="background:var(--orange-light);color:var(--orange);">↔️</div>
+        <h3>Percentage Difference</h3>
+        <p>Percentage change between two values.</p>
+        <div class="arrow">Calculate →</div>
+    </a>
+    <a href="/utility/reverse-percentage" class="calc-card">
+        <div class="icon" style="background:var(--purple-light);color:var(--purple);">🔄</div>
+        <h3>Reverse Percentage</h3>
+        <p>X is Y% of what number?</p>
+        <div class="arrow">Calculate →</div>
+    </a>
+    <a href="/utility/discount" class="calc-card">
+        <div class="icon" style="background:var(--red-light);color:var(--red);">🏷️</div>
+        <h3>Discount Calculator</h3>
+        <p>Sale price after discount. Savings amount and final price.</p>
+        <div class="arrow">Calculate →</div>
+    </a>
+    <a href="/utility/markup" class="calc-card">
+        <div class="icon" style="background:var(--orange-light);color:var(--orange);">💹</div>
+        <h3>Markup Calculator</h3>
+        <p>Selling price from cost and markup percentage.</p>
+        <div class="arrow">Calculate →</div>
+    </a>
+    <a href="/utility/margin" class="calc-card">
+        <div class="icon" style="background:var(--blue-light);color:var(--blue);">💼</div>
+        <h3>Margin Calculator</h3>
+        <p>Gross profit margin from revenue and cost.</p>
+        <div class="arrow">Calculate →</div>
+    </a>
+</div>
+
+<div class="section-label">Unit Conversion</div>
+<div class="calc-grid">
+    <a href="/utility/unit-converter" class="calc-card">
+        <div class="icon" style="background:var(--purple-light);color:var(--purple);">⚖️</div>
+        <h3>Unit Converter</h3>
+        <p>Length, weight, temperature, area, volume, speed, pressure, energy, power, fuel economy, data, and cooking units.</p>
+        <div class="arrow">Convert →</div>
+    </a>
+</div>
+
+<div class="section-label">Mathematics</div>
+<div class="calc-grid">
+    <a href="/utility/scientific" class="calc-card">
+        <div class="icon" style="background:var(--accent-light);color:var(--accent);">🧮</div>
+        <h3>Scientific Calculator</h3>
+        <p>Trigonometry, logarithms, powers, roots, and constants.</p>
+        <div class="arrow">Calculate →</div>
+    </a>
+    <a href="/utility/average" class="calc-card">
+        <div class="icon" style="background:var(--green-light);color:var(--green);">Ā</div>
+        <h3>Average Calculator</h3>
+        <p>Mean of any list of numbers.</p>
+        <div class="arrow">Calculate →</div>
+    </a>
+    <a href="/utility/median" class="calc-card">
+        <div class="icon" style="background:var(--blue-light);color:var(--blue);">M̃</div>
+        <h3>Median Calculator</h3>
+        <p>Middle value of a dataset.</p>
+        <div class="arrow">Calculate →</div>
+    </a>
+    <a href="/utility/mode" class="calc-card">
+        <div class="icon" style="background:var(--orange-light);color:var(--orange);">Mo</div>
+        <h3>Mode Calculator</h3>
+        <p>Most frequent value(s) in a dataset.</p>
+        <div class="arrow">Calculate →</div>
+    </a>
+    <a href="/utility/std-dev" class="calc-card">
+        <div class="icon" style="background:var(--purple-light);color:var(--purple);">σ</div>
+        <h3>Standard Deviation</h3>
+        <p>Population and sample standard deviation.</p>
+        <div class="arrow">Calculate →</div>
+    </a>
+    <a href="/utility/variance" class="calc-card">
+        <div class="icon" style="background:var(--red-light);color:var(--red);">σ²</div>
+        <h3>Variance Calculator</h3>
+        <p>Population and sample variance of a dataset.</p>
+        <div class="arrow">Calculate →</div>
+    </a>
+    <a href="/utility/fraction" class="calc-card">
+        <div class="icon" style="background:#fefce8;color:#ca8a04;">½</div>
+        <h3>Fraction Calculator</h3>
+        <p>Add, subtract, multiply, and divide fractions.</p>
+        <div class="arrow">Calculate →</div>
+    </a>
+    <a href="/utility/ratio" class="calc-card">
+        <div class="icon" style="background:var(--green-light);color:var(--green);">∶</div>
+        <h3>Ratio Calculator</h3>
+        <p>Simplify ratios and find equivalent ratios.</p>
+        <div class="arrow">Calculate →</div>
+    </a>
+    <a href="/utility/decimal-fraction" class="calc-card">
+        <div class="icon" style="background:var(--blue-light);color:var(--blue);">⇌</div>
+        <h3>Decimal ↔ Fraction</h3>
+        <p>Convert between decimals and fractions.</p>
+        <div class="arrow">Convert →</div>
+    </a>
+    <a href="/utility/prime-checker" class="calc-card">
+        <div class="icon" style="background:var(--accent-light);color:var(--accent);">ℙ</div>
+        <h3>Prime Number Checker</h3>
+        <p>Is a number prime? List all prime factors.</p>
+        <div class="arrow">Check →</div>
+    </a>
+    <a href="/utility/gcd-lcm" class="calc-card">
+        <div class="icon" style="background:var(--orange-light);color:var(--orange);">GCD</div>
+        <h3>GCD & LCM</h3>
+        <p>Greatest common divisor and least common multiple.</p>
+        <div class="arrow">Calculate →</div>
+    </a>
+    <a href="/utility/factorial" class="calc-card">
+        <div class="icon" style="background:var(--purple-light);color:var(--purple);">n!</div>
+        <h3>Factorial Calculator</h3>
+        <p>n! for any non-negative integer.</p>
+        <div class="arrow">Calculate →</div>
+    </a>
+    <a href="/utility/exponent" class="calc-card">
+        <div class="icon" style="background:var(--red-light);color:var(--red);">xⁿ</div>
+        <h3>Exponent Calculator</h3>
+        <p>Compute base raised to any power.</p>
+        <div class="arrow">Calculate →</div>
+    </a>
+    <a href="/utility/square-root" class="calc-card">
+        <div class="icon" style="background:var(--green-light);color:var(--green);">√</div>
+        <h3>Square Root</h3>
+        <p>Square root, cube root, and nth root of any number.</p>
+        <div class="arrow">Calculate →</div>
+    </a>
+    <a href="/utility/random-number" class="calc-card">
+        <div class="icon" style="background:#fefce8;color:#ca8a04;">🎲</div>
+        <h3>Random Number Generator</h3>
+        <p>Random integers or decimals in a custom range.</p>
+        <div class="arrow">Generate →</div>
+    </a>
+</div>
+
+<div class="section-label">Everyday</div>
+<div class="calc-grid">
+    <a href="/utility/tip" class="calc-card">
+        <div class="icon" style="background:var(--green-light);color:var(--green);">🍽️</div>
+        <h3>Tip Calculator</h3>
+        <p>Tip amount and total bill for any percentage.</p>
+        <div class="arrow">Calculate →</div>
+    </a>
+    <a href="/utility/split-bill" class="calc-card">
+        <div class="icon" style="background:var(--blue-light);color:var(--blue);">👥</div>
+        <h3>Split Bill</h3>
+        <p>Divide a bill equally among any number of people.</p>
+        <div class="arrow">Calculate →</div>
+    </a>
+    <a href="/utility/fuel-cost" class="calc-card">
+        <div class="icon" style="background:var(--orange-light);color:var(--orange);">⛽</div>
+        <h3>Fuel Cost Calculator</h3>
+        <p>Trip fuel cost from distance, mileage, and fuel price.</p>
+        <div class="arrow">Calculate →</div>
+    </a>
+    <a href="/utility/electricity-cost" class="calc-card">
+        <div class="icon" style="background:#fefce8;color:#ca8a04;">💡</div>
+        <h3>Electricity Cost</h3>
+        <p>Monthly electricity bill from appliance wattage and usage.</p>
+        <div class="arrow">Calculate →</div>
+    </a>
+    <a href="/utility/internet-speed" class="calc-card">
+        <div class="icon" style="background:var(--accent-light);color:var(--accent);">🌐</div>
+        <h3>Internet Speed Converter</h3>
+        <p>Convert between Mbps, MB/s, GB/s, and Kbps.</p>
+        <div class="arrow">Convert →</div>
+    </a>
+    <a href="/utility/download-time" class="calc-card">
+        <div class="icon" style="background:var(--purple-light);color:var(--purple);">⬇️</div>
+        <h3>Download Time</h3>
+        <p>How long to download a file at a given speed.</p>
+        <div class="arrow">Calculate →</div>
+    </a>
+    <a href="/utility/pace" class="calc-card">
+        <div class="icon" style="background:var(--green-light);color:var(--green);">🏃</div>
+        <h3>Pace Calculator</h3>
+        <p>Running pace, speed, or time — given any two values.</p>
+        <div class="arrow">Calculate →</div>
+    </a>
+    <a href="/utility/sleep" class="calc-card">
+        <div class="icon" style="background:var(--blue-light);color:var(--blue);">😴</div>
+        <h3>Sleep Calculator</h3>
+        <p>Best wake-up or bedtimes based on sleep cycles.</p>
+        <div class="arrow">Calculate →</div>
+    </a>
+</div>
+{% endblock %}

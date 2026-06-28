@@ -322,6 +322,123 @@ def calc_corrected_calcium(total_calcium, albumin):
     }
 
 
+def calc_ffmi(weight_kg, height_cm, body_fat_percent):
+    """Fat-Free Mass Index — measures muscle relative to height."""
+    height_m = height_cm / 100
+    fat_free_mass = weight_kg * (1 - body_fat_percent / 100)
+    ffmi = fat_free_mass / (height_m ** 2)
+    ffmi_normalized = ffmi + 6.1 * (1.8 - height_m)
+
+    if ffmi < 18:
+        category = "Below Average"
+    elif ffmi < 20:
+        category = "Average"
+    elif ffmi < 22:
+        category = "Above Average"
+    elif ffmi < 25:
+        category = "Excellent"
+    elif ffmi < 26:
+        category = "Superior — Near Natural Limit"
+    else:
+        category = "Exceptional (possibly enhanced)"
+
+    return {
+        "ffmi": round(ffmi, 1),
+        "ffmi_normalized": round(ffmi_normalized, 1),
+        "fat_free_mass_kg": round(fat_free_mass, 1),
+        "fat_mass_kg": round(weight_kg * body_fat_percent / 100, 1),
+        "category": category,
+        "weight_kg": weight_kg,
+        "height_cm": height_cm,
+        "body_fat_percent": body_fat_percent,
+    }
+
+
+def calc_lean_body_mass(weight_kg, body_fat_percent, height_cm=None, gender="male"):
+    """Lean Body Mass — cross-validated with Boer and James formulas."""
+    # US Navy / body fat method
+    lean_bf = weight_kg * (1 - body_fat_percent / 100)
+    fat_mass = weight_kg * body_fat_percent / 100
+
+    results = {"lean_body_mass_kg": round(lean_bf, 1), "fat_mass_kg": round(fat_mass, 1)}
+
+    if height_cm:
+        # Boer formula
+        if gender == "male":
+            boer = 0.407 * weight_kg + 0.267 * height_cm - 19.2
+            james = 1.1 * weight_kg - 128 * (weight_kg / height_cm) ** 2
+        else:
+            boer = 0.252 * weight_kg + 0.473 * height_cm - 48.3
+            james = 1.07 * weight_kg - 148 * (weight_kg / height_cm) ** 2
+        results["lean_boer_kg"] = round(max(boer, 0), 1)
+        results["lean_james_kg"] = round(max(james, 0), 1)
+        results["average_lean_kg"] = round((lean_bf + max(boer, 0) + max(james, 0)) / 3, 1)
+
+    results.update({"body_fat_percent": body_fat_percent, "weight_kg": weight_kg})
+    return results
+
+
+def calc_protein_intake(weight_kg, goal="maintain", body_fat_percent=None, activity_level="moderate"):
+    """Daily protein target using lean mass when available."""
+    if body_fat_percent is not None:
+        lean_mass = weight_kg * (1 - body_fat_percent / 100)
+    else:
+        lean_mass = weight_kg * 0.82  # assume ~18% fat
+
+    multipliers = {
+        "sedentary": {"lose": 1.6, "maintain": 1.2, "gain": 1.8},
+        "light":     {"lose": 1.8, "maintain": 1.4, "gain": 2.0},
+        "moderate":  {"lose": 2.0, "maintain": 1.6, "gain": 2.2},
+        "active":    {"lose": 2.2, "maintain": 1.8, "gain": 2.4},
+        "very_active": {"lose": 2.4, "maintain": 2.0, "gain": 2.6},
+    }
+    mult = multipliers.get(activity_level, multipliers["moderate"]).get(goal, 1.6)
+    protein_g = lean_mass * mult
+
+    return {
+        "protein_g_per_day": round(protein_g, 0),
+        "protein_per_meal_3": round(protein_g / 3, 0),
+        "protein_per_meal_4": round(protein_g / 4, 0),
+        "protein_per_meal_5": round(protein_g / 5, 0),
+        "lean_mass_kg": round(lean_mass, 1),
+        "multiplier_g_per_kg_lean": mult,
+        "goal": goal,
+        "activity_level": activity_level,
+        "weight_kg": weight_kg,
+    }
+
+
+def calc_ideal_body_weight(height_cm, gender):
+    """Ideal body weight using Devine, Hamwi, and Robinson formulas."""
+    height_in = height_cm / 2.54
+    inches_over = max(0, height_in - 60)
+
+    if gender == "male":
+        devine = 50 + 2.3 * inches_over
+        hamwi = 48 + 2.7 * inches_over
+        robinson = 52 + 1.9 * inches_over
+    else:
+        devine = 45.5 + 2.3 * inches_over
+        hamwi = 45.5 + 2.2 * inches_over
+        robinson = 49 + 1.7 * inches_over
+
+    height_m = height_cm / 100
+    bmi_low = round(18.5 * height_m ** 2, 1)
+    bmi_high = round(24.9 * height_m ** 2, 1)
+    avg = (devine + hamwi + robinson) / 3
+
+    return {
+        "ibw_devine_kg": round(max(devine, 0), 1),
+        "ibw_hamwi_kg": round(max(hamwi, 0), 1),
+        "ibw_robinson_kg": round(max(robinson, 0), 1),
+        "ibw_average_kg": round(max(avg, 0), 1),
+        "healthy_range_low_kg": bmi_low,
+        "healthy_range_high_kg": bmi_high,
+        "height_cm": height_cm,
+        "gender": gender,
+    }
+
+
 def calc_atherogenic_index(triglycerides, hdl):
     """AIP = log10(Triglycerides / HDL) — both in mg/dL."""
     if hdl <= 0:

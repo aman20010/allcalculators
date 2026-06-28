@@ -95,6 +95,63 @@ function getInflationRate() {
     return 0;
 }
 
+// ── Calculator result storage ──
+const CALC_STORE = 'calcHub_';
+
+function saveCalcResult(key, data) {
+    try { localStorage.setItem(CALC_STORE + key, JSON.stringify({ data, ts: Date.now() })); } catch(e) {}
+}
+
+function loadCalcResult(key) {
+    try {
+        const raw = localStorage.getItem(CALC_STORE + key);
+        if (!raw) return null;
+        return JSON.parse(raw).data;
+    } catch(e) { return null; }
+}
+
+function prefillField(id, value) {
+    if (value == null || value === undefined) return;
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.value = value;
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+}
+
+// deps: [{key, name, url}, ...]
+// Returns HTML for either a "prefilled" notice or a "complete X first" hint
+function prereqBannerHTML(deps) {
+    const missing = deps.filter(d => !loadCalcResult(d.key));
+    if (missing.length === 0) {
+        const names = deps.map(d => d.name).join(' & ');
+        return `<div class="prefill-notice">✓ Values auto-filled from ${names} — verify before calculating.</div>`;
+    }
+    const links = missing.map(d => `<a href="${d.url}">${d.name}</a>`).join(' and ');
+    return `<div class="prereq-hint">💡 Complete ${links} first for automatic input.</div>`;
+}
+
+// ── Primary/Derived tab setup ──
+function setupSegmentTabs() {
+    document.querySelectorAll('.seg-tabs').forEach(tabBar => {
+        tabBar.querySelectorAll('.seg-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                const parent = tab.closest('.seg-tabs');
+                parent.querySelectorAll('.seg-tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                const paneId = 'pane-' + tab.dataset.pane;
+                const container = parent.nextElementSibling;
+                // walk siblings until we find the pane container
+                let root = parent.parentElement;
+                root.querySelectorAll('.calc-pane').forEach(p => p.classList.remove('active'));
+                const pane = root.querySelector('#' + paneId);
+                if (pane) pane.classList.add('active');
+            });
+        });
+    });
+}
+
+document.addEventListener('DOMContentLoaded', setupSegmentTabs);
+
 function inflationHTML() {
     return `<div class="inflation-toggle">
         <label class="switch"><input type="checkbox" id="inflation-toggle"><span class="slider"></span></label>

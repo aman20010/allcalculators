@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}Sleep Calculator — CalcHub{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="/">Home</a><span class="sep">/</span><a href="/utility">Utility</a><span class="sep">/</span><span class="current">Sleep Calculator</span></div>
+<div class="page-header"><h1>Sleep Calculator</h1><p>Optimal wake-up times based on 90-minute sleep cycles</p></div>
+<div class="calc-layout">
+<div class="calc-form">
+    <h2>Choose Mode</h2>
+    <div class="field">
+        <label for="mode">I want to know</label>
+        <select id="mode" onchange="toggleMode()" style="padding:.55rem .75rem;border:1.5px solid var(--border);border-radius:8px;font-size:.9rem;font-family:inherit;width:100%;">
+            <option value="wakeup">When to wake up (given bedtime)</option>
+            <option value="bedtime">When to go to bed (given wake-up time)</option>
+        </select>
+    </div>
+    <div class="field" id="f-bed"><label for="bed">Bedtime</label><input type="time" id="bed" value="23:00"></div>
+    <div class="field" id="f-wake" style="display:none;"><label for="wake">Wake-up Time</label><input type="time" id="wake" value="07:00"></div>
+    <div class="field"><label>Fall-asleep delay</label><div class="input-wrap"><input type="number" id="delay" value="14" min="0" max="60"><span class="suffix">min</span></div></div>
+    <button class="btn btn-primary" onclick="calculate()">Calculate</button>
+</div>
+<div class="calc-results">
+    <h2>Results</h2>
+    <div id="results-placeholder" class="results-placeholder"><div class="icon">😴</div><p>Click Calculate to see optimal sleep times.</p></div>
+    <div id="results" style="display:none;">
+        <div class="section-label" id="r-lbl"></div>
+        <div id="r-times" style="display:flex;flex-direction:column;gap:.5rem;margin-top:.5rem;"></div>
+        <div class="info-box" style="margin-top:1rem;">Sleep cycles last ~90 minutes. Waking at the end of a cycle helps you feel more refreshed.</div>
+    </div>
+</div>
+</div>
+{% endblock %}
+{% block scripts %}<script>
+function toggleMode(){
+    const m=document.getElementById("mode").value;
+    document.getElementById("f-bed").style.display=m==="wakeup"?"":"none";
+    document.getElementById("f-wake").style.display=m==="bedtime"?"":"none";
+}
+function calculate(){
+    const mode=document.getElementById("mode").value, delay=+document.getElementById("delay").value;
+    const CYCLE=90, cycles=[3,4,5,6];
+    let results=[];
+    if(mode==="wakeup"){
+        const [bh,bm]=document.getElementById("bed").value.split(":").map(Number);
+        const baseMin=bh*60+bm+delay;
+        results=cycles.map(c=>{
+            const wakeMin=(baseMin+c*CYCLE)%1440;
+            const h=Math.floor(wakeMin/60), mn=wakeMin%60;
+            return {label:`${c} cycles (${c*1.5}h)`,time:`${String(h).padStart(2,"0")}:${String(mn).padStart(2,"0")}`,recommended:c===5||c===6};
+        });
+        document.getElementById("r-lbl").textContent="Suggested wake-up times:";
+    } else {
+        const [wh,wm]=document.getElementById("wake").value.split(":").map(Number);
+        const wakeMin=wh*60+wm;
+        results=cycles.map(c=>{
+            const bedMin=((wakeMin-c*CYCLE-delay)%1440+1440)%1440;
+            const h=Math.floor(bedMin/60), mn=bedMin%60;
+            return {label:`${c} cycles (${c*1.5}h sleep)`,time:`${String(h).padStart(2,"0")}:${String(mn).padStart(2,"0")}`,recommended:c===5||c===6};
+        });
+        document.getElementById("r-lbl").textContent="Suggested bedtimes:";
+    }
+    showResults("results");
+    document.getElementById("r-times").innerHTML=results.map(r=>`
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:.6rem 1rem;background:${r.recommended?"var(--accent-soft)":"var(--surface-alt)"};border:1.5px solid ${r.recommended?"var(--accent)":"var(--border)"};border-radius:8px;">
+            <span style="font-size:.85rem;color:var(--text-muted);">${r.label}</span>
+            <strong style="font-size:1.2rem;color:${r.recommended?"var(--accent)":"var(--text)"};">${r.time}</strong>
+            ${r.recommended?'<span style="font-size:.7rem;background:var(--accent);color:#fff;padding:.15rem .4rem;border-radius:4px;">Best</span>':""}
+        </div>`).join("");
+}
+</script>{% endblock %}

@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block title %}Ideal Body Weight Calculator — CalcHub{% endblock %}
+{% block content %}
+<div class="breadcrumb">
+    <a href="/">Home</a><span class="sep">/</span><a href="/health">Health</a><span class="sep">/</span><span class="current">Ideal Body Weight</span>
+</div>
+<div class="page-header">
+    <h1>Ideal Body Weight Calculator</h1>
+    <p>Evidence-based ideal weight range using three clinical formulas</p>
+</div>
+<div class="calc-layout">
+    <div class="calc-form">
+        <h2>Enter Details</h2>
+        <div id="prereq-banner"></div>
+        <div class="field">
+            <label>Gender</label>
+            <div class="toggle-group">
+                <input type="radio" name="gender" id="g_male" value="male" checked>
+                <label for="g_male">Male</label>
+                <input type="radio" name="gender" id="g_female" value="female">
+                <label for="g_female">Female</label>
+            </div>
+        </div>
+        <div class="field">
+            <label for="height">Height <span class="field-value"></span></label>
+            <div class="input-wrap"><input type="number" id="height" value="170" min="100" max="250"><span class="suffix">cm</span></div>
+            <input type="range" id="height_r" min="140" max="220" step="1" value="170">
+        </div>
+        <button class="btn btn-primary" onclick="calculate()">Calculate Ideal Weight</button>
+    </div>
+    <div class="calc-results">
+        <h2>Results</h2>
+        <div id="results-placeholder" class="results-placeholder">
+            <div class="icon">🎯</div>
+            <p>Enter your height and gender to calculate ideal body weight.</p>
+        </div>
+        <div id="results" style="display:none;">
+            <div class="result-hero">
+                <div class="label">Average Ideal Weight</div>
+                <div class="value" id="r-avg"></div>
+                <div class="sub" id="r-range"></div>
+            </div>
+            <div class="result-stats">
+                <div class="stat-card"><div class="label">Devine Formula</div><div class="value" id="r-devine"></div></div>
+                <div class="stat-card"><div class="label">Hamwi Formula</div><div class="value" id="r-hamwi"></div></div>
+                <div class="stat-card"><div class="label">Robinson Formula</div><div class="value" id="r-robinson"></div></div>
+                <div class="stat-card green"><div class="label">Healthy BMI Range</div><div class="value" id="r-bmi-range"></div></div>
+            </div>
+            <div class="info-box">
+                <strong>About these formulas:</strong> Devine (1974) is widely used in pharmacology; Hamwi (1964) is common in clinical nutrition; Robinson (1983) is used in pulmonology.<br>
+                <span style="font-size:.75rem; color:var(--text-muted);">Healthy BMI range (18.5–24.9) gives the broadest scientifically validated range.</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+syncSlider("height_r","height","","cm");
+
+(function prefillFromStorage() {
+    const bmi = loadCalcResult('bmi');
+    document.getElementById('prereq-banner').innerHTML = prereqBannerHTML([
+        { key: 'bmi', name: 'BMI Calculator', url: '/health/bmi' },
+    ]);
+    if (bmi) {
+        prefillField('height', bmi.height_cm);
+    }
+})();
+
+async function calculate() {
+    const data = {
+        height_cm: +document.getElementById("height").value,
+        gender: document.getElementById("g_male").checked ? "male" : "female",
+    };
+    const res = await postCalc("/health/api/ideal-body-weight", data);
+    if (res.status !== "success") return alert(res.message);
+    const d = res.data;
+    showResults("results");
+    document.getElementById("r-avg").textContent = d.ibw_average_kg + " kg";
+    document.getElementById("r-range").textContent = "Healthy BMI range: " + d.healthy_range_low_kg + " – " + d.healthy_range_high_kg + " kg";
+    document.getElementById("r-devine").textContent = d.ibw_devine_kg + " kg";
+    document.getElementById("r-hamwi").textContent = d.ibw_hamwi_kg + " kg";
+    document.getElementById("r-robinson").textContent = d.ibw_robinson_kg + " kg";
+    document.getElementById("r-bmi-range").textContent = d.healthy_range_low_kg + " – " + d.healthy_range_high_kg + " kg";
+    saveCalcResult('idealBodyWeight', { ibw_average_kg: d.ibw_average_kg, healthy_range_low_kg: d.healthy_range_low_kg, healthy_range_high_kg: d.healthy_range_high_kg });
+}
+</script>
+{% endblock %}

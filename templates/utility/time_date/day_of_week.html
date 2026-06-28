@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Day of Week — CalcHub{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="/">Home</a><span class="sep">/</span><a href="/utility">Utility</a><span class="sep">/</span><span class="current">Day of Week</span></div>
+<div class="page-header"><h1>Day of Week Calculator</h1><p>Find out what day any date falls on</p></div>
+<div class="calc-layout">
+<div class="calc-form">
+    <h2>Enter Date</h2>
+    <div class="field"><label for="d">Date</label><input type="date" id="d" style="width:100%;padding:.55rem .75rem;border:1.5px solid var(--border);border-radius:8px;font-size:.9rem;font-family:inherit;"></div>
+    <button class="btn btn-primary" onclick="calculate()">Find Day</button>
+</div>
+<div class="calc-results">
+    <h2>Results</h2>
+    <div id="results-placeholder" class="results-placeholder"><div class="icon">🗓️</div><p>Pick a date.</p></div>
+    <div id="results" style="display:none;">
+        <div class="result-hero"><div class="label">Day of Week</div><div class="value" id="r-day"></div><div class="sub" id="r-date"></div></div>
+        <div class="info-box" id="r-info"></div>
+    </div>
+</div>
+</div>
+{% endblock %}
+{% block scripts %}<script>
+document.getElementById("d").value = new Date().toISOString().split("T")[0];
+const DAYS = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+function calculate() {
+    const d = new Date(document.getElementById("d").value + "T12:00:00");
+    if (isNaN(d)) return alert("Invalid date.");
+    const day = DAYS[d.getDay()];
+    const isWeekend = d.getDay() === 0 || d.getDay() === 6;
+    showResults("results");
+    document.getElementById("r-day").textContent = day;
+    document.getElementById("r-date").textContent = `${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
+    document.getElementById("r-info").innerHTML = `<strong>Week type:</strong> ${isWeekend ? "Weekend" : "Weekday"} &bull; <strong>Day number:</strong> ${d.getDay() + 1} of 7 &bull; <strong>Day of year:</strong> ${Math.ceil((d - new Date(d.getFullYear(),0,1))/86400000)+1}`;
+}
+</script>{% endblock %}

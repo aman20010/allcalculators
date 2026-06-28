@@ -69,6 +69,8 @@ async function calculate() {
     const color = d.bmi < 18.5 ? "var(--blue)" : d.bmi < 25 ? "var(--green)" : d.bmi < 30 ? "var(--orange)" : "var(--red)";
     hero.querySelector(".value").style.color = color;
     hero.querySelector(".label").style.color = color;
+
+    saveCalcResult('bmi', { bmi: d.bmi, weight_kg: d.weight_kg, height_cm: d.height_cm, category: d.category });
 }
 </script>
 {% endblock %}

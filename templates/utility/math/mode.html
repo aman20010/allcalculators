@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Mode Calculator — CalcHub{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="/">Home</a><span class="sep">/</span><a href="/utility">Utility</a><span class="sep">/</span><span class="current">Mode</span></div>
+<div class="page-header"><h1>Mode Calculator</h1><p>Most frequent value(s) in a dataset</p></div>
+<div class="calc-layout">
+<div class="calc-form">
+    <h2>Enter Numbers</h2>
+    <div class="field"><label for="nums">Numbers (comma or space separated)</label><textarea id="nums" rows="4" style="width:100%;padding:.55rem .75rem;border:1.5px solid var(--border);border-radius:8px;font-size:.9rem;font-family:inherit;resize:vertical;">4, 2, 2, 4, 4, 5, 1, 4</textarea></div>
+    <button class="btn btn-primary" onclick="calculate()">Calculate Mode</button>
+</div>
+<div class="calc-results">
+    <h2>Results</h2>
+    <div id="results-placeholder" class="results-placeholder"><div class="icon">Mo</div><p>Enter numbers separated by commas.</p></div>
+    <div id="results" style="display:none;">
+        <div class="result-hero"><div class="label">Mode</div><div class="value" id="r-mode"></div><div class="sub" id="r-type"></div></div>
+        <div class="result-stats"><div class="stat-card"><div class="label">Frequency</div><div class="value" id="r-freq"></div></div><div class="stat-card"><div class="label">Count (n)</div><div class="value" id="r-n"></div></div></div>
+        <div class="info-box" id="r-freq-table"></div>
+    </div>
+</div>
+</div>
+{% endblock %}
+{% block scripts %}<script>
+function calculate() {
+    const nums = document.getElementById("nums").value.split(/[\s,;]+/).map(Number).filter(n=>!isNaN(n));
+    if (!nums.length) return alert("Enter at least one number.");
+    const freq = {}; nums.forEach(n=>{freq[n]=(freq[n]||0)+1;});
+    const maxFreq = Math.max(...Object.values(freq));
+    const modes = Object.entries(freq).filter(([,f])=>f===maxFreq).map(([n])=>+n).sort((a,b)=>a-b);
+    showResults("results");
+    document.getElementById("r-mode").textContent = modes.join(", ");
+    document.getElementById("r-type").textContent = modes.length===1?"Unimodal":modes.length===2?"Bimodal":`Multimodal (${modes.length} modes)`;
+    document.getElementById("r-freq").textContent = maxFreq + (maxFreq===1?" (each)":" times");
+    document.getElementById("r-n").textContent = nums.length;
+    const rows = Object.entries(freq).sort(([a],[b])=>+a-+b).map(([v,f])=>`<tr><td style="padding:.3rem .5rem;border-bottom:1px solid var(--border);">${v}</td><td style="padding:.3rem .5rem;border-bottom:1px solid var(--border);text-align:right;font-weight:${f===maxFreq?700:400};color:${f===maxFreq?"var(--accent)":"inherit"};">${f}</td></tr>`).join("");
+    document.getElementById("r-freq-table").innerHTML = `<strong>Frequency table:</strong><table style="width:100%;margin-top:.5rem;"><tr><th style="text-align:left;font-size:.7rem;color:var(--text-muted);padding:.2rem .5rem;">Value</th><th style="text-align:right;font-size:.7rem;color:var(--text-muted);padding:.2rem .5rem;">Count</th></tr>${rows}</table>`;
+}
+</script>{% endblock %}

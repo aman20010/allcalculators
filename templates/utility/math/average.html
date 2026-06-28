@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Average Calculator — CalcHub{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="/">Home</a><span class="sep">/</span><a href="/utility">Utility</a><span class="sep">/</span><span class="current">Average</span></div>
+<div class="page-header"><h1>Average Calculator</h1><p>Arithmetic mean of a list of numbers</p></div>
+<div class="calc-layout">
+<div class="calc-form">
+    <h2>Enter Numbers</h2>
+    <div class="field"><label for="nums">Numbers (comma or space separated)</label><textarea id="nums" rows="4" style="width:100%;padding:.55rem .75rem;border:1.5px solid var(--border);border-radius:8px;font-size:.9rem;font-family:inherit;resize:vertical;" placeholder="e.g. 10, 20, 30, 40">10, 20, 30, 40, 50</textarea></div>
+    <button class="btn btn-primary" onclick="calculate()">Calculate Average</button>
+</div>
+<div class="calc-results">
+    <h2>Results</h2>
+    <div id="results-placeholder" class="results-placeholder"><div class="icon">Ā</div><p>Enter numbers separated by commas.</p></div>
+    <div id="results" style="display:none;">
+        <div class="result-hero"><div class="label">Average (Mean)</div><div class="value" id="r-avg"></div></div>
+        <div class="result-stats">
+            <div class="stat-card"><div class="label">Count</div><div class="value" id="r-n"></div></div>
+            <div class="stat-card green"><div class="label">Sum</div><div class="value" id="r-sum"></div></div>
+            <div class="stat-card"><div class="label">Min</div><div class="value" id="r-min"></div></div>
+            <div class="stat-card"><div class="label">Max</div><div class="value" id="r-max"></div></div>
+        </div>
+    </div>
+</div>
+</div>
+{% endblock %}
+{% block scripts %}<script>
+function parseNums() { return document.getElementById("nums").value.split(/[\s,;]+/).map(Number).filter(n=>!isNaN(n)&&n!==undefined); }
+function calculate() {
+    const nums = parseNums();
+    if (!nums.length) return alert("Enter at least one number.");
+    const sum = nums.reduce((a,b)=>a+b,0);
+    const avg = sum/nums.length;
+    showResults("results");
+    document.getElementById("r-avg").textContent = +avg.toPrecision(8);
+    document.getElementById("r-n").textContent = nums.length;
+    document.getElementById("r-sum").textContent = +sum.toPrecision(8);
+    document.getElementById("r-min").textContent = Math.min(...nums);
+    document.getElementById("r-max").textContent = Math.max(...nums);
+}
+</script>{% endblock %}

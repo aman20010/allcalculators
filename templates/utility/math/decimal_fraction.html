@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Decimal ↔ Fraction — CalcHub{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="/">Home</a><span class="sep">/</span><a href="/utility">Utility</a><span class="sep">/</span><span class="current">Decimal ↔ Fraction</span></div>
+<div class="page-header"><h1>Decimal ↔ Fraction Converter</h1><p>Convert between decimals and fractions instantly</p></div>
+<div class="calc-form" style="max-width:520px;">
+    <h2>Decimal → Fraction</h2>
+    <div class="field"><label for="dec">Decimal</label><input type="number" id="dec" value="0.625" step="any"></div>
+    <button class="btn btn-primary" style="margin-bottom:1rem;" onclick="decToFrac()">Convert</button>
+    <div id="r-d2f" class="result-hero" style="display:none;"><div class="label">Fraction</div><div class="value" id="r-d2f-val"></div></div>
+
+    <div style="border-top:1px solid var(--border);margin:1.5rem 0;"></div>
+    <h2>Fraction → Decimal</h2>
+    <div class="field-row">
+        <div class="field"><label for="fn">Numerator</label><input type="number" id="fn" value="5"></div>
+        <div class="field"><label for="fd">Denominator</label><input type="number" id="fd" value="8"></div>
+    </div>
+    <button class="btn btn-primary" onclick="fracToDec()">Convert</button>
+    <div id="r-f2d" class="result-hero" style="display:none;margin-top:1rem;"><div class="label">Decimal</div><div class="value" id="r-f2d-val"></div></div>
+</div>
+{% endblock %}
+{% block scripts %}<script>
+function gcd(a,b){a=Math.abs(a);b=Math.abs(b);while(b){let t=b;b=a%b;a=t;}return a||1;}
+function decToFrac() {
+    let d = +document.getElementById("dec").value;
+    if (isNaN(d)) return alert("Enter a valid decimal.");
+    const neg = d < 0; d = Math.abs(d);
+    const whole = Math.floor(d); let rem = d - whole;
+    if (rem === 0) { document.getElementById("r-d2f").style.display="block"; document.getElementById("r-d2f-val").textContent=(neg?"-":"")+whole; return; }
+    const prec = 1e9; let num = Math.round(rem*prec), den = prec;
+    const g = gcd(num, den); num/=g; den/=g;
+    const totalNum = whole*den+num;
+    const fracStr = whole>0?`${whole} ${num}/${den}`:`${num}/${den}`;
+    document.getElementById("r-d2f").style.display="block";
+    document.getElementById("r-d2f-val").textContent=(neg?"-":"")+fracStr;
+}
+function fracToDec() {
+    const n=+document.getElementById("fn").value, d=+document.getElementById("fd").value;
+    if(!d) return alert("Denominator cannot be 0.");
+    const dec = n/d;
+    document.getElementById("r-f2d").style.display="block";
+    document.getElementById("r-f2d-val").textContent=+dec.toPrecision(10);
+}
+</script>{% endblock %}

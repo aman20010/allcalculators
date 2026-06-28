@@ -12,71 +12,147 @@
     </div>
 </div>
 
-<div class="section-label">General Wellness</div>
-<div class="calc-grid">
-    <a href="/health/bmi" class="calc-card">
-        <div class="icon" style="background:var(--green-light); color:var(--green);">⚖️</div>
-        <h3>BMI Calculator</h3>
-        <p>Body Mass Index with WHO categories and ideal weight range.</p>
-        <div class="arrow">Calculate →</div>
-    </a>
-    <a href="/health/bmr-tdee" class="calc-card">
-        <div class="icon" style="background:var(--orange-light); color:var(--orange);">🔥</div>
-        <h3>BMR & TDEE Calculator</h3>
-        <p>Basal metabolic rate, daily calorie needs, and macro targets.</p>
-        <div class="arrow">Calculate →</div>
-    </a>
-    <a href="/health/body-fat" class="calc-card">
-        <div class="icon" style="background:var(--purple-light); color:var(--purple);">📏</div>
-        <h3>Body Fat % Calculator</h3>
-        <p>US Navy method — estimate body fat from body measurements.</p>
-        <div class="arrow">Calculate →</div>
-    </a>
-    <a href="/health/water-intake" class="calc-card">
-        <div class="icon" style="background:var(--blue-light); color:var(--blue);">💧</div>
-        <h3>Water Intake Calculator</h3>
-        <p>Daily water requirement based on weight, activity, and climate.</p>
-        <div class="arrow">Calculate →</div>
-    </a>
+<div class="seg-tabs">
+    <div class="seg-tab active" data-pane="primary">Primary</div>
+    <div class="seg-tab" data-pane="derived">Derived</div>
 </div>
 
-<div class="section-label">Blood Report Markers</div>
-<div class="calc-grid">
-    <a href="/health/egfr" class="calc-card">
-        <div class="icon" style="background:var(--red-light); color:var(--red);">🫘</div>
-        <h3>eGFR Calculator</h3>
-        <p>Kidney function — estimated GFR from serum creatinine (CKD-EPI 2021).</p>
-        <div class="arrow">Calculate →</div>
-    </a>
-    <a href="/health/ldl" class="calc-card">
-        <div class="icon" style="background:var(--orange-light); color:var(--orange);">🫀</div>
-        <h3>LDL Cholesterol Calculator</h3>
-        <p>Friedewald formula — calculate LDL from total cholesterol, HDL, and triglycerides.</p>
-        <div class="arrow">Calculate →</div>
-    </a>
-    <a href="/health/homa-ir" class="calc-card">
-        <div class="icon" style="background:var(--purple-light); color:var(--purple);">🩸</div>
-        <h3>HOMA-IR Calculator</h3>
-        <p>Insulin resistance index from fasting glucose and insulin levels.</p>
-        <div class="arrow">Calculate →</div>
-    </a>
-    <a href="/health/hba1c" class="calc-card">
-        <div class="icon" style="background:var(--accent-light); color:var(--accent);">🔬</div>
-        <h3>HbA1c ↔ Blood Sugar</h3>
-        <p>Convert between HbA1c and estimated average blood glucose.</p>
-        <div class="arrow">Calculate →</div>
-    </a>
-    <a href="/health/corrected-calcium" class="calc-card">
-        <div class="icon" style="background:#fefce8; color:#ca8a04;">🦴</div>
-        <h3>Corrected Calcium</h3>
-        <p>Adjust total calcium for albumin levels — important when albumin is abnormal.</p>
-        <div class="arrow">Calculate →</div>
-    </a>
-    <a href="/health/atherogenic-index" class="calc-card">
-        <div class="icon" style="background:var(--red-light); color:var(--red);">❤️‍🔥</div>
-        <h3>Atherogenic Index (AIP)</h3>
-        <p>Cardiovascular risk from triglycerides and HDL — predicts plaque buildup.</p>
-        <div class="arrow">Calculate →</div>
-    </a>
-</div>
+<!-- ── Primary pane ── -->
+<div id="pane-primary" class="calc-pane active">
+
+    <div class="section-label">Body Composition</div>
+    <div class="calc-grid">
+        <a href="/health/bmi" class="calc-card">
+            <div class="icon" style="background:var(--green-light); color:var(--green);">⚖️</div>
+            <h3>BMI Calculator</h3>
+            <p>Body Mass Index with WHO categories and ideal weight range.</p>
+            <div class="arrow">Calculate →</div>
+        </a>
+        <a href="/health/body-fat" class="calc-card">
+            <div class="icon" style="background:var(--purple-light); color:var(--purple);">📏</div>
+            <h3>Body Fat % Calculator</h3>
+            <p>US Navy method — estimate body fat from body measurements.</p>
+            <div class="arrow">Calculate →</div>
+        </a>
+        <a href="/health/bmr-tdee" class="calc-card">
+            <div class="icon" style="background:var(--orange-light); color:var(--orange);">🔥</div>
+            <h3>BMR & TDEE Calculator</h3>
+            <p>Basal metabolic rate, daily calorie needs, and macro targets.</p>
+            <div class="arrow">Calculate →</div>
+        </a>
+        <a href="/health/water-intake" class="calc-card">
+            <div class="icon" style="background:var(--blue-light); color:var(--blue);">💧</div>
+            <h3>Water Intake Calculator</h3>
+            <p>Daily water requirement based on weight, activity, and climate.</p>
+            <div class="arrow">Calculate →</div>
+        </a>
+    </div>
+
+    <div class="section-label">Heart & Lipids</div>
+    <div class="calc-grid">
+        <a href="/health/ldl" class="calc-card">
+            <div class="icon" style="background:var(--orange-light); color:var(--orange);">🫀</div>
+            <h3>LDL Cholesterol Calculator</h3>
+            <p>Friedewald formula — calculate LDL from total cholesterol, HDL, and triglycerides.</p>
+            <div class="arrow">Calculate →</div>
+        </a>
+        <a href="/health/atherogenic-index" class="calc-card">
+            <div class="icon" style="background:var(--red-light); color:var(--red);">❤️‍🔥</div>
+            <h3>Atherogenic Index (AIP)</h3>
+            <p>Cardiovascular risk from triglycerides and HDL — predicts plaque buildup.</p>
+            <div class="arrow">Calculate →</div>
+        </a>
+    </div>
+
+    <div class="section-label">Diabetes</div>
+    <div class="calc-grid">
+        <a href="/health/hba1c" class="calc-card">
+            <div class="icon" style="background:var(--accent-light); color:var(--accent);">🔬</div>
+            <h3>HbA1c ↔ Blood Sugar</h3>
+            <p>Convert between HbA1c and estimated average blood glucose.</p>
+            <div class="arrow">Calculate →</div>
+        </a>
+        <a href="/health/homa-ir" class="calc-card">
+            <div class="icon" style="background:var(--purple-light); color:var(--purple);">🩸</div>
+            <h3>HOMA-IR Calculator</h3>
+            <p>Insulin resistance index from fasting glucose and insulin levels.</p>
+            <div class="arrow">Calculate →</div>
+        </a>
+    </div>
+
+    <div class="section-label">Kidney & Electrolytes</div>
+    <div class="calc-grid">
+        <a href="/health/egfr" class="calc-card">
+            <div class="icon" style="background:var(--red-light); color:var(--red);">🫘</div>
+            <h3>eGFR Calculator</h3>
+            <p>Kidney function — estimated GFR from serum creatinine (CKD-EPI 2021).</p>
+            <div class="arrow">Calculate →</div>
+        </a>
+        <a href="/health/corrected-calcium" class="calc-card">
+            <div class="icon" style="background:#fefce8; color:#ca8a04;">🦴</div>
+            <h3>Corrected Calcium</h3>
+            <p>Adjust total calcium for albumin levels — important when albumin is abnormal.</p>
+            <div class="arrow">Calculate →</div>
+        </a>
+    </div>
+
+</div><!-- /pane-primary -->
+
+<!-- ── Derived pane ── -->
+<div id="pane-derived" class="calc-pane">
+    <p style="font-size:.82rem; color:var(--text-secondary); margin-bottom:1.25rem;">
+        Derived calculators auto-fill inputs from your previous calculations saved in this browser.
+    </p>
+
+    <div class="section-label">Body Composition</div>
+    <div class="calc-grid">
+        <a href="/health/ffmi" class="calc-card">
+            <div class="icon" style="background:var(--green-light); color:var(--green);">💪</div>
+            <h3>FFMI</h3>
+            <p>Fat-Free Mass Index — assess muscle development relative to height.</p>
+            <div class="derived-uses">
+                <span class="uses-label">Uses:</span>
+                <span class="uses-chip">Body Fat %</span>
+                <span class="uses-chip">BMI</span>
+            </div>
+            <div class="arrow">Calculate →</div>
+        </a>
+        <a href="/health/lean-body-mass" class="calc-card">
+            <div class="icon" style="background:var(--blue-light); color:var(--blue);">🏋️</div>
+            <h3>Lean Body Mass</h3>
+            <p>Your lean mass and fat mass from body fat percentage and weight.</p>
+            <div class="derived-uses">
+                <span class="uses-label">Uses:</span>
+                <span class="uses-chip">Body Fat %</span>
+            </div>
+            <div class="arrow">Calculate →</div>
+        </a>
+        <a href="/health/ideal-body-weight" class="calc-card">
+            <div class="icon" style="background:var(--accent-light); color:var(--accent);">🎯</div>
+            <h3>Ideal Body Weight</h3>
+            <p>Ideal weight range from height using Devine, Hamwi & Robinson formulas.</p>
+            <div class="derived-uses">
+                <span class="uses-label">Uses:</span>
+                <span class="uses-chip">BMI</span>
+            </div>
+            <div class="arrow">Calculate →</div>
+        </a>
+    </div>
+
+    <div class="section-label">Nutrition</div>
+    <div class="calc-grid">
+        <a href="/health/protein-intake" class="calc-card">
+            <div class="icon" style="background:var(--orange-light); color:var(--orange);">🥩</div>
+            <h3>Protein Intake</h3>
+            <p>Daily protein target based on lean mass, goal, and activity level.</p>
+            <div class="derived-uses">
+                <span class="uses-label">Uses:</span>
+                <span class="uses-chip">BMR & TDEE</span>
+                <span class="uses-chip">Body Fat %</span>
+            </div>
+            <div class="arrow">Calculate →</div>
+        </a>
+    </div>
+
+</div><!-- /pane-derived -->
 {% endblock %}

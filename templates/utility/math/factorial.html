@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Factorial Calculator — CalcHub{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="/">Home</a><span class="sep">/</span><a href="/utility">Utility</a><span class="sep">/</span><span class="current">Factorial</span></div>
+<div class="page-header"><h1>Factorial Calculator</h1><p>n! for any non-negative integer</p></div>
+<div class="calc-layout">
+<div class="calc-form">
+    <h2>Enter n</h2>
+    <div class="field"><label for="n">n (0 to 170)</label><input type="number" id="n" value="10" min="0" max="170"><input type="range" id="n_r" min="0" max="30" step="1" value="10"></div>
+    <button class="btn btn-primary" onclick="calculate()">Calculate n!</button>
+</div>
+<div class="calc-results">
+    <h2>Results</h2>
+    <div id="results-placeholder" class="results-placeholder"><div class="icon">n!</div><p>Enter n and click Calculate.</p></div>
+    <div id="results" style="display:none;">
+        <div class="result-hero"><div class="label" id="r-lbl">Result</div><div class="value" id="r-val"></div></div>
+        <div class="info-box" id="r-digits"></div>
+    </div>
+</div>
+</div>
+{% endblock %}
+{% block scripts %}<script>
+syncSlider("n_r","n","","!");
+function calculate() {
+    const n = +document.getElementById("n").value;
+    if (n < 0 || !Number.isInteger(n)) return alert("Enter a non-negative integer.");
+    if (n > 170) return alert("Result is too large (> 10^308). Max n = 170.");
+    let r = 1n; for (let i=2n; i<=BigInt(n); i++) r*=i;
+    const str = r.toString();
+    showResults("results");
+    document.getElementById("r-lbl").textContent = `${n}!`;
+    document.getElementById("r-val").textContent = n <= 20 ? str : r.toLocaleString();
+    document.getElementById("r-digits").innerHTML = `<strong>Digits:</strong> ${str.length} &bull; <strong>Scientific:</strong> ${Number(r).toExponential(4)}`;
+}
+</script>{% endblock %}

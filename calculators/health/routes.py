@@ -3,6 +3,7 @@ from .engines import (
     calc_bmi, calc_bmr_tdee, calc_body_fat, calc_water_intake,
     calc_egfr, calc_ldl_friedewald, calc_homa_ir, calc_hba1c_to_glucose,
     calc_corrected_calcium, calc_atherogenic_index,
+    calc_ffmi, calc_lean_body_mass, calc_protein_intake, calc_ideal_body_weight,
 )
 
 health_bp = Blueprint("health", __name__, url_prefix="/health")
@@ -64,6 +65,22 @@ def corrected_calcium_page():
 @health_bp.route("/atherogenic-index")
 def atherogenic_index_page():
     return render_template("health/atherogenic_index.html")
+
+@health_bp.route("/ffmi")
+def ffmi_page():
+    return render_template("health/ffmi.html")
+
+@health_bp.route("/lean-body-mass")
+def lean_body_mass_page():
+    return render_template("health/lean_body_mass.html")
+
+@health_bp.route("/protein-intake")
+def protein_intake_page():
+    return render_template("health/protein_intake.html")
+
+@health_bp.route("/ideal-body-weight")
+def ideal_body_weight_page():
+    return render_template("health/ideal_body_weight.html")
 
 
 # ── API routes ──
@@ -202,6 +219,63 @@ def api_atherogenic_index():
         result = calc_atherogenic_index(
             triglycerides=_get_float(data, "triglycerides"),
             hdl=_get_float(data, "hdl"),
+        )
+        return jsonify({"status": "success", "data": result})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 400
+
+
+@health_bp.route("/api/ffmi", methods=["POST"])
+def api_ffmi():
+    data = request.get_json()
+    try:
+        result = calc_ffmi(
+            weight_kg=_get_float(data, "weight_kg"),
+            height_cm=_get_float(data, "height_cm"),
+            body_fat_percent=_get_float(data, "body_fat_percent"),
+        )
+        return jsonify({"status": "success", "data": result})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 400
+
+
+@health_bp.route("/api/lean-body-mass", methods=["POST"])
+def api_lean_body_mass():
+    data = request.get_json()
+    try:
+        result = calc_lean_body_mass(
+            weight_kg=_get_float(data, "weight_kg"),
+            body_fat_percent=_get_float(data, "body_fat_percent"),
+            height_cm=_get_float(data, "height_cm"),
+            gender=_get_str(data, "gender", "male"),
+        )
+        return jsonify({"status": "success", "data": result})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 400
+
+
+@health_bp.route("/api/protein-intake", methods=["POST"])
+def api_protein_intake():
+    data = request.get_json()
+    try:
+        result = calc_protein_intake(
+            weight_kg=_get_float(data, "weight_kg"),
+            goal=_get_str(data, "goal", "maintain"),
+            body_fat_percent=_get_float(data, "body_fat_percent"),
+            activity_level=_get_str(data, "activity_level", "moderate"),
+        )
+        return jsonify({"status": "success", "data": result})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 400
+
+
+@health_bp.route("/api/ideal-body-weight", methods=["POST"])
+def api_ideal_body_weight():
+    data = request.get_json()
+    try:
+        result = calc_ideal_body_weight(
+            height_cm=_get_float(data, "height_cm"),
+            gender=_get_str(data, "gender", "male"),
         )
         return jsonify({"status": "success", "data": result})
     except Exception as e:

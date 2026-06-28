@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Scientific Calculator — CalcHub{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="/">Home</a><span class="sep">/</span><a href="/utility">Utility</a><span class="sep">/</span><span class="current">Scientific Calculator</span></div>
+<div class="page-header"><h1>Scientific Calculator</h1><p>Trigonometry, logarithms, powers, roots, and constants</p></div>
+<div style="max-width:440px;">
+<div class="calc-form" style="padding:1rem;">
+    <div id="display" style="background:var(--surface-alt);border:1.5px solid var(--border);border-radius:8px;padding:.6rem 1rem;font-size:1.4rem;font-weight:700;text-align:right;margin-bottom:.75rem;min-height:3rem;word-break:break-all;font-family:monospace;">0</div>
+    <div id="expr" style="font-size:.7rem;color:var(--text-muted);text-align:right;min-height:1.2rem;margin-bottom:.5rem;font-family:monospace;"></div>
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:4px;">
+        {% set btns = [
+            ["sin","sin("],["cos","cos("],["tan","tan("],["(",  "("],  [")", ")"],
+            ["asin","asin("],["acos","acos("],["atan","atan("],["π","Math.PI"],["e","Math.E"],
+            ["log","log10("],["ln","log("],["√","sqrt("],["x²","**2"],["xⁿ","**"],
+            ["7","7"],["8","8"],["9","9"],["÷","/"],["CE","CE"],
+            ["4","4"],["5","5"],["6","6"],["×","*"],["C","C"],
+            ["1","1"],["2","2"],["3","3"],["−","-"],["⌫","⌫"],
+            ["0","0"],[".","."],["+/-","+/-"],["+"," + "],["=","="]
+        ] %}
+        {% for label, val in btns %}
+        <button onclick="press('{{val}}','{{label}}')" style="padding:.55rem .2rem;border:1px solid var(--border);border-radius:6px;font-size:.85rem;font-weight:600;cursor:pointer;background:{% if val in ['='] %}var(--accent){% elif val in ['C','CE','⌫'] %}var(--red-light){% elif label in ['sin','cos','tan','asin','acos','atan','log','ln','√','x²','xⁿ','π','e'] %}var(--accent-light){% else %}var(--surface-alt){% endif %};color:{% if val=='=' %}#fff{% elif val in ['C','CE','⌫'] %}var(--red){% elif label in ['sin','cos','tan','asin','acos','atan','log','ln','√','x²','xⁿ','π','e'] %}var(--accent){% else %}var(--text){% endif %};transition:all .15s;">{{label}}</button>
+        {% endfor %}
+    </div>
+</div>
+</div>
+{% endblock %}
+{% block scripts %}<script>
+let expr = "", lastResult = null;
+const display = document.getElementById("display");
+const exprEl  = document.getElementById("expr");
+const DEG = Math.PI / 180;
+function sin(x){return Math.sin(x*DEG);} function cos(x){return Math.cos(x*DEG);}
+function tan(x){return Math.tan(x*DEG);} function asin(x){return Math.asin(x)/DEG;}
+function acos(x){return Math.acos(x)/DEG;} function atan(x){return Math.atan(x)/DEG;}
+function log10(x){return Math.log10(x);} function log(x){return Math.log(x);}
+function sqrt(x){return Math.sqrt(x);}
+
+function press(val, label) {
+    if (val === "C") { expr=""; display.textContent="0"; exprEl.textContent=""; return; }
+    if (val === "CE") { expr=expr.slice(0,-1)||""; display.textContent=expr||"0"; return; }
+    if (val === "⌫") { expr=expr.slice(0,-1); display.textContent=expr||"0"; return; }
+    if (val === "+/-") { if(expr) expr = expr.startsWith("-")?expr.slice(1):"-"+expr; display.textContent=expr||"0"; return; }
+    if (val === "=") {
+        try {
+            exprEl.textContent = expr;
+            const r = eval(expr.replace(/Math\.PI/g,Math.PI).replace(/Math\.E/g,Math.E));
+            lastResult = r;
+            display.textContent = +r.toPrecision(10);
+            expr = String(+r.toPrecision(10));
+        } catch(e) { display.textContent="Error"; expr=""; }
+        return;
+    }
+    expr += val;
+    display.textContent = expr;
+}
+</script>{% endblock %}

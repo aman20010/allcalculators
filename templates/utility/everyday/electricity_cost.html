@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}Electricity Cost — CalcHub{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="/">Home</a><span class="sep">/</span><a href="/utility">Utility</a><span class="sep">/</span><span class="current">Electricity Cost</span></div>
+<div class="page-header"><h1>Electricity Cost Calculator</h1><p>Calculate power consumption and monthly electricity bills</p></div>
+<div class="calc-layout">
+<div class="calc-form">
+    <h2>Appliance Details</h2>
+    <div id="appliances"></div>
+    <button type="button" class="btn" style="margin-bottom:1rem;background:var(--surface-alt);border:1.5px solid var(--border);" onclick="addRow()">+ Add Appliance</button>
+    <div class="field"><label for="rate">Electricity Tariff</label><div class="input-wrap"><span class="prefix">₹</span><input type="number" id="rate" class="has-prefix" value="6.50" step="0.01"><span class="suffix">/kWh</span></div></div>
+    <button class="btn btn-primary" onclick="calculate()">Calculate</button>
+</div>
+<div class="calc-results">
+    <h2>Results</h2>
+    <div id="results-placeholder" class="results-placeholder"><div class="icon">⚡</div><p>Add appliances and click Calculate.</p></div>
+    <div id="results" style="display:none;">
+        <div class="result-hero"><div class="label">Monthly Bill</div><div class="value" id="r-month"></div></div>
+        <div class="result-stats">
+            <div class="stat-card blue"><div class="label">Daily Cost</div><div class="value" id="r-day"></div></div>
+            <div class="stat-card"><div class="label">Daily kWh</div><div class="value" id="r-kwh"></div></div>
+            <div class="stat-card orange"><div class="label">Annual Bill</div><div class="value" id="r-year"></div></div>
+        </div>
+        <div class="info-box" id="r-breakdown"></div>
+    </div>
+</div>
+</div>
+{% endblock %}
+{% block scripts %}<script>
+let rows=[];
+function addRow(name="",watts=0,hrs=0){
+    const id=Date.now();
+    rows.push(id);
+    const div=document.createElement("div");
+    div.className="field-row"; div.id="row-"+id; div.style="margin-bottom:.5rem;align-items:flex-end;";
+    div.innerHTML=`<div class="field" style="flex:2;margin:0;"><label style="font-size:.75rem;">Appliance</label><input type="text" value="${name}" placeholder="e.g. AC" style="padding:.45rem .6rem;"></div><div class="field" style="flex:1;margin:0;"><label style="font-size:.75rem;">Watts</label><input type="number" value="${watts}" placeholder="W" style="padding:.45rem .6rem;"></div><div class="field" style="flex:1;margin:0;"><label style="font-size:.75rem;">Hours/day</label><input type="number" value="${hrs}" placeholder="h" style="padding:.45rem .6rem;"></div><button onclick="removeRow(${id})" style="background:none;border:none;color:var(--red,#ef4444);font-size:1.2rem;cursor:pointer;padding:.45rem .4rem;line-height:1;" title="Remove">×</button>`;
+    document.getElementById("appliances").appendChild(div);
+}
+function removeRow(id){document.getElementById("row-"+id)?.remove();rows=rows.filter(r=>r!==id);}
+function calculate(){
+    const rate=+document.getElementById("rate").value; if(!rate)return alert("Enter tariff rate.");
+    let totalWh=0; const breakdown=[];
+    document.querySelectorAll("#appliances .field-row").forEach(row=>{
+        const [nameEl,wEl,hEl]=row.querySelectorAll("input");
+        const w=+wEl.value, h=+hEl.value, name=nameEl.value||"Appliance";
+        if(w>0&&h>0){const wh=w*h; totalWh+=wh; breakdown.push(`${name}: ${(wh/1000).toFixed(3)} kWh/day`);}
+    });
+    if(!totalWh)return alert("Add at least one appliance with non-zero watts and hours.");
+    const kwhDay=totalWh/1000, costDay=kwhDay*rate, costMonth=costDay*30, costYear=costDay*365;
+    showResults("results");
+    const fmt=v=>"₹"+v.toLocaleString("en-IN",{maximumFractionDigits:2});
+    document.getElementById("r-month").textContent=fmt(costMonth);
+    document.getElementById("r-day").textContent=fmt(costDay);
+    document.getElementById("r-kwh").textContent=kwhDay.toFixed(3)+" kWh";
+    document.getElementById("r-year").textContent=fmt(costYear);
+    document.getElementById("r-breakdown").innerHTML="<strong>Breakdown:</strong><ul style='margin:.4rem 0 0;padding-left:1.2rem;'>"+breakdown.map(b=>`<li style="font-size:.82rem;">${b}</li>`).join("")+"</ul>";
+}
+addRow("AC (1.5 ton)",1500,8);addRow("Refrigerator",150,24);addRow("TV",100,5);
+</script>{% endblock %}

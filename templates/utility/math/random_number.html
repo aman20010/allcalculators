@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Random Number Generator — CalcHub{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="/">Home</a><span class="sep">/</span><a href="/utility">Utility</a><span class="sep">/</span><span class="current">Random Number</span></div>
+<div class="page-header"><h1>Random Number Generator</h1><p>Generate random integers or decimals in any range</p></div>
+<div class="calc-layout">
+<div class="calc-form">
+    <h2>Settings</h2>
+    <div class="field-row">
+        <div class="field"><label for="min">Min</label><input type="number" id="min" value="1" step="any"></div>
+        <div class="field"><label for="max">Max</label><input type="number" id="max" value="100" step="any"></div>
+    </div>
+    <div class="field-row">
+        <div class="field"><label for="qty">How many?</label><input type="number" id="qty" value="1" min="1" max="1000"></div>
+        <div class="field"><label for="decimals">Decimal places</label><input type="number" id="decimals" value="0" min="0" max="10"></div>
+    </div>
+    <div class="field"><label><input type="checkbox" id="unique" style="margin-right:.4rem;"> Unique (no repeats)</label></div>
+    <button class="btn btn-primary" onclick="generate()">Generate 🎲</button>
+</div>
+<div class="calc-results">
+    <h2>Results</h2>
+    <div id="results-placeholder" class="results-placeholder"><div class="icon">🎲</div><p>Click Generate to create random numbers.</p></div>
+    <div id="results" style="display:none;">
+        <div class="result-hero"><div class="label">Generated</div><div class="value" id="r-main"></div></div>
+        <div id="r-list" style="display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.75rem;"></div>
+        <button class="btn btn-primary" style="margin-top:1rem;" onclick="generate()">Regenerate 🎲</button>
+    </div>
+</div>
+</div>
+{% endblock %}
+{% block scripts %}<script>
+function rand(min,max,dec){return +(Math.random()*(max-min)+min).toFixed(dec);}
+function generate(){
+    const min=+document.getElementById("min").value, max=+document.getElementById("max").value;
+    const qty=Math.min(+document.getElementById("qty").value,1000);
+    const dec=+document.getElementById("decimals").value, unique=document.getElementById("unique").checked;
+    if(min>=max)return alert("Max must be greater than Min.");
+    let nums=[];
+    if(unique){const pool=new Set();let attempts=0;while(pool.size<qty&&attempts<1e5){pool.add(rand(min,max,dec));attempts++;}nums=[...pool];}
+    else{for(let i=0;i<qty;i++)nums.push(rand(min,max,dec));}
+    showResults("results");
+    document.getElementById("r-main").textContent=qty===1?nums[0]:nums.slice(0,3).join(", ")+(nums.length>3?"…":"");
+    document.getElementById("r-list").innerHTML=nums.map(n=>`<span style="padding:.3rem .75rem;background:var(--accent-soft);color:var(--accent);border-radius:6px;font-size:.85rem;font-weight:700;">${n}</span>`).join("");
+}
+</script>{% endblock %}

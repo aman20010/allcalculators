@@ -576,6 +576,101 @@ body {
     margin-top: 3rem;
 }
 
+/* ── Segment tabs ── */
+.seg-tabs {
+    display: flex;
+    gap: 2px;
+    background: var(--surface-alt);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 3px;
+    margin-bottom: 1.5rem;
+    width: fit-content;
+}
+.seg-tab {
+    padding: .45rem 1.4rem;
+    border-radius: 7px;
+    font-size: .875rem;
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--text-secondary);
+    transition: all var(--transition);
+    user-select: none;
+}
+.seg-tab:hover { color: var(--text); }
+.seg-tab.active {
+    background: var(--surface);
+    color: var(--accent);
+    box-shadow: var(--shadow-xs);
+}
+
+/* ── Tab panes ── */
+.calc-pane { display: none; }
+.calc-pane.active { display: block; animation: fadeUp .25s ease both; }
+
+/* ── Derived card extras ── */
+.derived-uses {
+    font-size: .7rem;
+    color: var(--text-muted);
+    margin-top: .4rem;
+    display: flex;
+    align-items: center;
+    gap: .3rem;
+    flex-wrap: wrap;
+}
+.derived-uses .uses-label { font-weight: 600; color: var(--text-secondary); }
+.derived-uses .uses-chip {
+    background: var(--accent-soft);
+    color: var(--accent);
+    padding: .1rem .45rem;
+    border-radius: 4px;
+    font-size: .68rem;
+    font-weight: 600;
+}
+
+/* ── Prerequisite hint banners ── */
+.prereq-hint {
+    background: #fff7ed;
+    border: 1px solid #fed7aa;
+    border-radius: 8px;
+    padding: .65rem .9rem;
+    font-size: .8rem;
+    color: #c2410c;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: flex-start;
+    gap: .5rem;
+    line-height: 1.5;
+}
+.prereq-hint a { color: #c2410c; font-weight: 600; text-decoration: underline; text-underline-offset: 2px; }
+.prefill-notice {
+    background: var(--green-light);
+    border: 1px solid #6ee7b7;
+    border-radius: 8px;
+    padding: .65rem .9rem;
+    font-size: .8rem;
+    color: var(--green);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: flex-start;
+    gap: .5rem;
+    line-height: 1.5;
+}
+
+/* ── Readiness score bar ── */
+.readiness-bar-wrap {
+    background: var(--surface-alt);
+    border-radius: 999px;
+    height: 12px;
+    overflow: hidden;
+    margin: .5rem 0 .25rem;
+}
+.readiness-bar {
+    height: 100%;
+    border-radius: 999px;
+    transition: width .6s cubic-bezier(.4,0,.2,1);
+}
+
 /* ── Animations ── */
 @keyframes fadeUp {
     from { opacity: 0; transform: translateY(12px); }

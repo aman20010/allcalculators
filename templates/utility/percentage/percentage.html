@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Percentage Calculator — CalcHub{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="/">Home</a><span class="sep">/</span><a href="/utility">Utility</a><span class="sep">/</span><span class="current">Percentage</span></div>
+<div class="page-header"><h1>Percentage Calculator</h1><p>Solve any part of the percentage equation</p></div>
+<div class="calc-form" style="max-width:640px;">
+    <h2>What is X% of Y?</h2>
+    <div class="field-row">
+        <div class="field"><label for="pct">Percentage (%)</label><input type="number" id="pct" value="15" step="any"></div>
+        <div class="field"><label for="of">Of value</label><input type="number" id="of" value="200" step="any"></div>
+    </div>
+    <button class="btn btn-primary" style="margin-bottom:1rem;" onclick="calc1()">Calculate</button>
+    <div id="r1" class="result-hero" style="display:none;"><div class="label" id="r1l"></div><div class="value" id="r1v"></div></div>
+
+    <div style="border-top:1px solid var(--border);margin:1.25rem 0;"></div>
+    <h2>X is what % of Y?</h2>
+    <div class="field-row">
+        <div class="field"><label for="part">Part (X)</label><input type="number" id="part" value="30" step="any"></div>
+        <div class="field"><label for="whole">Whole (Y)</label><input type="number" id="whole" value="200" step="any"></div>
+    </div>
+    <button class="btn btn-primary" style="margin-bottom:1rem;" onclick="calc2()">Calculate</button>
+    <div id="r2" class="result-hero" style="display:none;"><div class="label" id="r2l"></div><div class="value" id="r2v"></div></div>
+
+    <div style="border-top:1px solid var(--border);margin:1.25rem 0;"></div>
+    <h2>X% of what is Y?</h2>
+    <div class="field-row">
+        <div class="field"><label for="pct3">Percentage (%)</label><input type="number" id="pct3" value="15" step="any"></div>
+        <div class="field"><label for="result3">Result (Y)</label><input type="number" id="result3" value="30" step="any"></div>
+    </div>
+    <button class="btn btn-primary" onclick="calc3()">Calculate</button>
+    <div id="r3" class="result-hero" style="display:none;margin-top:1rem;"><div class="label" id="r3l"></div><div class="value" id="r3v"></div></div>
+</div>
+{% endblock %}
+{% block scripts %}<script>
+function showHero(id, label, value) {
+    document.getElementById(id).style.display="block";
+    document.getElementById(id+"l").textContent = label;
+    document.getElementById(id+"v").textContent = value;
+}
+function calc1() {
+    const p=+document.getElementById("pct").value, y=+document.getElementById("of").value;
+    const r = p/100*y;
+    showHero("r1", `${p}% of ${y} =`, +r.toPrecision(8));
+}
+function calc2() {
+    const x=+document.getElementById("part").value, y=+document.getElementById("whole").value;
+    if (!y) return alert("Whole cannot be 0.");
+    const r = x/y*100;
+    showHero("r2", `${x} is __% of ${y} =`, +r.toPrecision(6) + "%");
+}
+function calc3() {
+    const p=+document.getElementById("pct3").value, y=+document.getElementById("result3").value;
+    if (!p) return alert("Percentage cannot be 0.");
+    const r = y/(p/100);
+    showHero("r3", `${p}% of ____ = ${y} ⟹`, +r.toPrecision(8));
+}
+</script>{% endblock %}

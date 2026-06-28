@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Median Calculator — CalcHub{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="/">Home</a><span class="sep">/</span><a href="/utility">Utility</a><span class="sep">/</span><span class="current">Median</span></div>
+<div class="page-header"><h1>Median Calculator</h1><p>Middle value of a dataset</p></div>
+<div class="calc-layout">
+<div class="calc-form">
+    <h2>Enter Numbers</h2>
+    <div class="field"><label for="nums">Numbers (comma or space separated)</label><textarea id="nums" rows="4" style="width:100%;padding:.55rem .75rem;border:1.5px solid var(--border);border-radius:8px;font-size:.9rem;font-family:inherit;resize:vertical;">3, 1, 4, 1, 5, 9, 2, 6, 5, 3</textarea></div>
+    <button class="btn btn-primary" onclick="calculate()">Calculate Median</button>
+</div>
+<div class="calc-results">
+    <h2>Results</h2>
+    <div id="results-placeholder" class="results-placeholder"><div class="icon">M̃</div><p>Enter numbers separated by commas.</p></div>
+    <div id="results" style="display:none;">
+        <div class="result-hero"><div class="label">Median</div><div class="value" id="r-med"></div></div>
+        <div class="result-stats">
+            <div class="stat-card"><div class="label">Count (n)</div><div class="value" id="r-n"></div></div>
+            <div class="stat-card blue"><div class="label">Lower Quartile (Q1)</div><div class="value" id="r-q1"></div></div>
+            <div class="stat-card blue"><div class="label">Upper Quartile (Q3)</div><div class="value" id="r-q3"></div></div>
+            <div class="stat-card green"><div class="label">IQR</div><div class="value" id="r-iqr"></div></div>
+        </div>
+        <div class="info-box">Sorted: <span id="r-sorted" style="font-family:monospace;font-size:.8rem;"></span></div>
+    </div>
+</div>
+</div>
+{% endblock %}
+{% block scripts %}<script>
+function calculate() {
+    const nums = document.getElementById("nums").value.split(/[\s,;]+/).map(Number).filter(n=>!isNaN(n));
+    if (!nums.length) return alert("Enter at least one number.");
+    const s = [...nums].sort((a,b)=>a-b);
+    const n = s.length, mid = Math.floor(n/2);
+    const median = n%2===0 ? (s[mid-1]+s[mid])/2 : s[mid];
+    const q1mid = Math.floor(mid/2);
+    const lower = s.slice(0,mid); const upper = n%2===0?s.slice(mid):s.slice(mid+1);
+    const q1 = lower.length%2===0 ? (lower[lower.length/2-1]+lower[lower.length/2])/2 : lower[Math.floor(lower.length/2)];
+    const q3 = upper.length%2===0 ? (upper[upper.length/2-1]+upper[upper.length/2])/2 : upper[Math.floor(upper.length/2)];
+    showResults("results");
+    document.getElementById("r-med").textContent = median;
+    document.getElementById("r-n").textContent = n;
+    document.getElementById("r-q1").textContent = q1;
+    document.getElementById("r-q3").textContent = q3;
+    document.getElementById("r-iqr").textContent = q3-q1;
+    document.getElementById("r-sorted").textContent = s.join(", ");
+}
+</script>{% endblock %}

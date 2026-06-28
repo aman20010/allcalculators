@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Square Root — CalcHub{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="/">Home</a><span class="sep">/</span><a href="/utility">Utility</a><span class="sep">/</span><span class="current">Square Root</span></div>
+<div class="page-header"><h1>Square Root Calculator</h1><p>Square root, cube root, and nth root</p></div>
+<div class="calc-layout">
+<div class="calc-form">
+    <h2>Enter Values</h2>
+    <div class="field"><label for="n">Number</label><input type="number" id="n" value="144" step="any"></div>
+    <div class="field"><label for="root">Root (n-th)</label><input type="number" id="root" value="2" min="1" step="1"><div class="hint">2 = square root, 3 = cube root, etc.</div></div>
+    <button class="btn btn-primary" onclick="calculate()">Calculate</button>
+</div>
+<div class="calc-results">
+    <h2>Results</h2>
+    <div id="results-placeholder" class="results-placeholder"><div class="icon">√</div><p>Enter a number and click Calculate.</p></div>
+    <div id="results" style="display:none;">
+        <div class="result-hero"><div class="label" id="r-lbl">Result</div><div class="value" id="r-val"></div></div>
+        <div class="result-stats">
+            <div class="stat-card green"><div class="label">√ (square root)</div><div class="value" id="r-sq"></div></div>
+            <div class="stat-card blue"><div class="label">∛ (cube root)</div><div class="value" id="r-cb"></div></div>
+            <div class="stat-card"><div class="label">Number²</div><div class="value" id="r-sq2"></div></div>
+            <div class="stat-card"><div class="label">Number³</div><div class="value" id="r-cu"></div></div>
+        </div>
+    </div>
+</div>
+</div>
+{% endblock %}
+{% block scripts %}<script>
+function calculate() {
+    const n=+document.getElementById("n").value, r=+document.getElementById("root").value;
+    if(n<0&&r%2===0) return alert("Even roots of negative numbers are not real.");
+    const result = Math.sign(n) * Math.pow(Math.abs(n),1/r);
+    showResults("results");
+    document.getElementById("r-lbl").textContent = r===2?"√"+n:r===3?"∛"+n:`${r}√${n}`;
+    document.getElementById("r-val").textContent = +result.toPrecision(8);
+    document.getElementById("r-sq").textContent  = n >= 0 ? +Math.sqrt(n).toPrecision(6) : "not real";
+    document.getElementById("r-cb").textContent  = +Math.cbrt(n).toPrecision(6);
+    document.getElementById("r-sq2").textContent = +Math.pow(n,2).toPrecision(8);
+    document.getElementById("r-cu").textContent  = +Math.pow(n,3).toPrecision(8);
+}
+</script>{% endblock %}
