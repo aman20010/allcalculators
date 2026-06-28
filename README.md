@@ -1,1 +1,2 @@
 # allcalculators
+Fixing the typo
