@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}CalcHub{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%234f46e5'/><text x='50%25' y='55%25' dominant-baseline='middle' text-anchor='middle' fill='white' font-family='sans-serif' font-weight='700' font-size='16'>C</text></svg>">
+    {% block head %}{% endblock %}
+</head>
+<body>
+    <nav class="navbar">
+        <a href="/" class="nav-brand">
+            <div class="logo">C</div>
+            Calc<span>Hub</span>
+        </a>
+        <div class="nav-links">
+            <a href="/finance" class="{% if request.path.startswith('/finance') %}active{% endif %}">Finance</a>
+            <a href="/health" class="{% if request.path.startswith('/health') %}active{% endif %}">Health</a>
+        </div>
+    </nav>
+    <main class="container">
+        {% block content %}{% endblock %}
+    </main>
+    <footer class="footer">CalcHub &mdash; Free financial & health calculators for India.</footer>
+    <script src="{{ url_for('static', filename='js/utils.js') }}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

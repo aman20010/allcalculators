@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% block title %}Body Fat % Calculator — CalcHub{% endblock %}
+{% block content %}
+<div class="breadcrumb">
+    <a href="/">Home</a><span class="sep">/</span><a href="/health">Health</a><span class="sep">/</span><span class="current">Body Fat %</span>
+</div>
+<div class="page-header">
+    <h1>Body Fat % Calculator</h1>
+    <p>Estimate body fat percentage using the US Navy method</p>
+</div>
+<div class="calc-layout">
+    <div class="calc-form">
+        <h2>Enter Details</h2>
+        <div class="field">
+            <label>Gender</label>
+            <div class="toggle-group">
+                <input type="radio" name="gender" id="g_male" value="male" checked>
+                <label for="g_male">Male</label>
+                <input type="radio" name="gender" id="g_female" value="female">
+                <label for="g_female">Female</label>
+            </div>
+        </div>
+        <div class="field-row">
+            <div class="field">
+                <label for="weight">Weight <span class="field-value"></span></label>
+                <div class="input-wrap"><input type="number" id="weight" value="75" min="20" max="300" step="0.5"><span class="suffix">kg</span></div>
+            </div>
+            <div class="field">
+                <label for="height">Height <span class="field-value"></span></label>
+                <div class="input-wrap"><input type="number" id="height" value="175" min="100" max="250"><span class="suffix">cm</span></div>
+            </div>
+        </div>
+        <div class="field">
+            <label for="age">Age <span class="field-value"></span></label>
+            <input type="number" id="age" value="28" min="15" max="80">
+        </div>
+        <div class="field-row">
+            <div class="field">
+                <label for="waist">Waist (at navel) <span class="field-value"></span></label>
+                <div class="input-wrap"><input type="number" id="waist" value="85" min="40" max="200" step="0.5"><span class="suffix">cm</span></div>
+            </div>
+            <div class="field">
+                <label for="neck">Neck <span class="field-value"></span></label>
+                <div class="input-wrap"><input type="number" id="neck" value="38" min="20" max="70" step="0.5"><span class="suffix">cm</span></div>
+            </div>
+        </div>
+        <div class="field" id="hip-field">
+            <label for="hip">Hip (widest point) <span class="field-value"></span></label>
+            <div class="input-wrap"><input type="number" id="hip" value="95" min="50" max="200" step="0.5"><span class="suffix">cm</span></div>
+            <div class="hint">Required for females</div>
+        </div>
+        <button class="btn btn-primary" onclick="calculate()">Calculate Body Fat</button>
+    </div>
+    <div class="calc-results">
+        <h2>Results</h2>
+        <div id="results-placeholder" class="results-placeholder">
+            <div class="icon">📏</div>
+            <p>Enter your measurements and click Calculate.</p>
+        </div>
+        <div id="results" style="display:none;">
+            <div class="result-hero" id="r-hero">
+                <div class="label">Body Fat Percentage</div>
+                <div class="value" id="r-bf"></div>
+                <div class="sub" id="r-category"></div>
+            </div>
+            <div class="result-stats">
+                <div class="stat-card orange"><div class="label">Fat Mass</div><div class="value" id="r-fat"></div></div>
+                <div class="stat-card green"><div class="label">Lean Mass</div><div class="value" id="r-lean"></div></div>
+            </div>
+            <div class="info-box">
+                <strong>Ideal ranges (Male):</strong> Athletic 6–13% &bull; Fitness 14–17% &bull; Average 18–24%<br>
+                <strong>Ideal ranges (Female):</strong> Athletic 14–20% &bull; Fitness 21–24% &bull; Average 25–31%
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+document.querySelectorAll('input[name="gender"]').forEach(r => r.addEventListener("change", () => {
+    document.getElementById("hip-field").style.display = document.getElementById("g_female").checked ? "block" : "none";
+}));
+
+async function calculate() {
+    const isFemale = document.getElementById("g_female").checked;
+    const data = {
+        weight_kg: +document.getElementById("weight").value,
+        height_cm: +document.getElementById("height").value,
+        age: +document.getElementById("age").value,
+        gender: isFemale ? "female" : "male",
+        waist_cm: +document.getElementById("waist").value,
+        neck_cm: +document.getElementById("neck").value,
+        hip_cm: isFemale ? +document.getElementById("hip").value : 0,
+    };
+    const res = await postCalc("/health/api/body-fat", data);
+    if (res.status !== "success") return alert(res.message);
+    const d = res.data;
+    showResults("results");
+    document.getElementById("r-bf").textContent = d.body_fat_percent + "%";
+    document.getElementById("r-category").textContent = d.category;
+    document.getElementById("r-fat").textContent = d.fat_mass_kg + " kg";
+    document.getElementById("r-lean").textContent = d.lean_mass_kg + " kg";
+}
+</script>
+{% endblock %}

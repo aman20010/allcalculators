@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}Health Calculators — CalcHub{% endblock %}
+{% block content %}
+<div class="breadcrumb">
+    <a href="/">Home</a><span class="sep">/</span><span class="current">Health</span>
+</div>
+<div class="category-header">
+    <div class="category-icon" style="background:var(--green-light); color:var(--green);">♥</div>
+    <div>
+        <h1 style="font-size:1.4rem;">Health Calculators</h1>
+        <p style="color:var(--text-secondary); font-size:.85rem;">General wellness metrics and blood report marker analysis</p>
+    </div>
+</div>
+
+<div class="section-label">General Wellness</div>
+<div class="calc-grid">
+    <a href="/health/bmi" class="calc-card">
+        <div class="icon" style="background:var(--green-light); color:var(--green);">⚖️</div>
+        <h3>BMI Calculator</h3>
+        <p>Body Mass Index with WHO categories and ideal weight range.</p>
+        <div class="arrow">Calculate →</div>
+    </a>
+    <a href="/health/bmr-tdee" class="calc-card">
+        <div class="icon" style="background:var(--orange-light); color:var(--orange);">🔥</div>
+        <h3>BMR & TDEE Calculator</h3>
+        <p>Basal metabolic rate, daily calorie needs, and macro targets.</p>
+        <div class="arrow">Calculate →</div>
+    </a>
+    <a href="/health/body-fat" class="calc-card">
+        <div class="icon" style="background:var(--purple-light); color:var(--purple);">📏</div>
+        <h3>Body Fat % Calculator</h3>
+        <p>US Navy method — estimate body fat from body measurements.</p>
+        <div class="arrow">Calculate →</div>
+    </a>
+    <a href="/health/water-intake" class="calc-card">
+        <div class="icon" style="background:var(--blue-light); color:var(--blue);">💧</div>
+        <h3>Water Intake Calculator</h3>
+        <p>Daily water requirement based on weight, activity, and climate.</p>
+        <div class="arrow">Calculate →</div>
+    </a>
+</div>
+
+<div class="section-label">Blood Report Markers</div>
+<div class="calc-grid">
+    <a href="/health/egfr" class="calc-card">
+        <div class="icon" style="background:var(--red-light); color:var(--red);">🫘</div>
+        <h3>eGFR Calculator</h3>
+        <p>Kidney function — estimated GFR from serum creatinine (CKD-EPI 2021).</p>
+        <div class="arrow">Calculate →</div>
+    </a>
+    <a href="/health/ldl" class="calc-card">
+        <div class="icon" style="background:var(--orange-light); color:var(--orange);">🫀</div>
+        <h3>LDL Cholesterol Calculator</h3>
+        <p>Friedewald formula — calculate LDL from total cholesterol, HDL, and triglycerides.</p>
+        <div class="arrow">Calculate →</div>
+    </a>
+    <a href="/health/homa-ir" class="calc-card">
+        <div class="icon" style="background:var(--purple-light); color:var(--purple);">🩸</div>
+        <h3>HOMA-IR Calculator</h3>
+        <p>Insulin resistance index from fasting glucose and insulin levels.</p>
+        <div class="arrow">Calculate →</div>
+    </a>
+    <a href="/health/hba1c" class="calc-card">
+        <div class="icon" style="background:var(--accent-light); color:var(--accent);">🔬</div>
+        <h3>HbA1c ↔ Blood Sugar</h3>
+        <p>Convert between HbA1c and estimated average blood glucose.</p>
+        <div class="arrow">Calculate →</div>
+    </a>
+    <a href="/health/corrected-calcium" class="calc-card">
+        <div class="icon" style="background:#fefce8; color:#ca8a04;">🦴</div>
+        <h3>Corrected Calcium</h3>
+        <p>Adjust total calcium for albumin levels — important when albumin is abnormal.</p>
+        <div class="arrow">Calculate →</div>
+    </a>
+    <a href="/health/atherogenic-index" class="calc-card">
+        <div class="icon" style="background:var(--red-light); color:var(--red);">❤️‍🔥</div>
+        <h3>Atherogenic Index (AIP)</h3>
+        <p>Cardiovascular risk from triglycerides and HDL — predicts plaque buildup.</p>
+        <div class="arrow">Calculate →</div>
+    </a>
+</div>
+{% endblock %}

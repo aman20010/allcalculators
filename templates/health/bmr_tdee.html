@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% block title %}BMR & TDEE Calculator — CalcHub{% endblock %}
+{% block content %}
+<div class="breadcrumb">
+    <a href="/">Home</a><span class="sep">/</span><a href="/health">Health</a><span class="sep">/</span><span class="current">BMR & TDEE</span>
+</div>
+<div class="page-header">
+    <h1>BMR & TDEE Calculator</h1>
+    <p>Basal Metabolic Rate and Total Daily Energy Expenditure (Mifflin-St Jeor)</p>
+</div>
+<div class="calc-layout">
+    <div class="calc-form">
+        <h2>Enter Details</h2>
+        <div class="field-row">
+            <div class="field">
+                <label for="weight">Weight <span class="field-value"></span></label>
+                <div class="input-wrap"><input type="number" id="weight" value="70" min="20" max="300" step="0.5"><span class="suffix">kg</span></div>
+                <input type="range" id="weight_r" min="30" max="180" step="0.5" value="70">
+            </div>
+            <div class="field">
+                <label for="height">Height <span class="field-value"></span></label>
+                <div class="input-wrap"><input type="number" id="height" value="170" min="100" max="250"><span class="suffix">cm</span></div>
+                <input type="range" id="height_r" min="100" max="220" step="1" value="170">
+            </div>
+        </div>
+        <div class="field-row">
+            <div class="field">
+                <label for="age">Age <span class="field-value"></span></label>
+                <input type="number" id="age" value="28" min="15" max="80">
+                <input type="range" id="age_r" min="15" max="80" step="1" value="28">
+            </div>
+            <div class="field">
+                <label>Gender</label>
+                <div class="toggle-group">
+                    <input type="radio" name="gender" id="g_male" value="male" checked>
+                    <label for="g_male">Male</label>
+                    <input type="radio" name="gender" id="g_female" value="female">
+                    <label for="g_female">Female</label>
+                </div>
+            </div>
+        </div>
+        <div class="field">
+            <label for="activity">Activity Level</label>
+            <select id="activity">
+                <option value="sedentary">Sedentary (desk job, no exercise)</option>
+                <option value="light">Lightly Active (1-3 days/week)</option>
+                <option value="moderate" selected>Moderately Active (3-5 days/week)</option>
+                <option value="active">Very Active (6-7 days/week)</option>
+                <option value="very_active">Extremely Active (athlete/physical job)</option>
+            </select>
+        </div>
+        <button class="btn btn-primary" onclick="calculate()">Calculate</button>
+    </div>
+    <div class="calc-results">
+        <h2>Results</h2>
+        <div id="results-placeholder" class="results-placeholder">
+            <div class="icon">🔥</div>
+            <p>Enter your details and click Calculate.</p>
+        </div>
+        <div id="results" style="display:none;">
+            <div class="result-hero">
+                <div class="label">Daily Calorie Need (TDEE)</div>
+                <div class="value" id="r-tdee"></div>
+                <div class="sub">calories/day to maintain weight</div>
+            </div>
+            <div class="result-stats">
+                <div class="stat-card"><div class="label">BMR (At Rest)</div><div class="value" id="r-bmr"></div></div>
+                <div class="stat-card"><div class="label">Protein Target</div><div class="value" id="r-protein"></div></div>
+            </div>
+            <div class="section-label" style="margin-top:.75rem;">Calorie Targets</div>
+            <div class="result-stats">
+                <div class="stat-card green"><div class="label">Lose 0.5 kg/week</div><div class="value" id="r-lose05"></div></div>
+                <div class="stat-card green"><div class="label">Lose 1 kg/week</div><div class="value" id="r-lose1"></div></div>
+                <div class="stat-card orange"><div class="label">Gain 0.5 kg/week</div><div class="value" id="r-gain05"></div></div>
+            </div>
+            <div class="info-box">
+                <strong>Mifflin-St Jeor Equation</strong> — considered the most accurate for estimating BMR.<br>
+                <span style="font-size:.75rem; color:var(--text-muted);">Protein target: 1.6g per kg body weight (general fitness recommendation).</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+syncSlider("weight_r","weight","","kg");
+syncSlider("height_r","height","","cm");
+syncSlider("age_r","age","","yrs");
+
+async function calculate() {
+    const data = {
+        weight_kg: +document.getElementById("weight").value,
+        height_cm: +document.getElementById("height").value,
+        age: +document.getElementById("age").value,
+        gender: document.getElementById("g_male").checked ? "male" : "female",
+        activity_level: document.getElementById("activity").value,
+    };
+    const res = await postCalc("/health/api/bmr-tdee", data);
+    if (res.status !== "success") return alert(res.message);
+    const d = res.data;
+    showResults("results");
+    document.getElementById("r-tdee").textContent = Math.round(d.tdee) + " kcal";
+    document.getElementById("r-bmr").textContent = Math.round(d.bmr) + " kcal";
+    document.getElementById("r-protein").textContent = Math.round(d.protein_g) + "g/day";
+    document.getElementById("r-lose05").textContent = Math.round(d.calories_to_lose_05kg) + " kcal";
+    document.getElementById("r-lose1").textContent = Math.round(d.calories_to_lose_1kg) + " kcal";
+    document.getElementById("r-gain05").textContent = Math.round(d.calories_to_gain_05kg) + " kcal";
+}
+</script>
+{% endblock %}

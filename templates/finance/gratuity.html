@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block title %}Gratuity Calculator — CalcHub{% endblock %}
+{% block content %}
+<div class="breadcrumb">
+    <a href="/">Home</a><span class="sep">/</span><a href="/finance">Finance</a><span class="sep">/</span><span class="current">Gratuity</span>
+</div>
+<div class="page-header">
+    <h1>Gratuity Calculator</h1>
+    <p>Calculate gratuity as per the Payment of Gratuity Act, 1972</p>
+</div>
+<div class="calc-layout">
+    <div class="calc-form">
+        <h2>Enter Details</h2>
+        <div class="field">
+            <label for="salary">Last Drawn Salary (Basic + DA) <span class="field-value"></span></label>
+            <div class="input-wrap"><span class="prefix">₹</span><input type="number" id="salary" class="has-prefix" value="50000" min="1000"></div>
+            <input type="range" id="salary_r" min="5000" max="500000" step="1000" value="50000">
+        </div>
+        <div class="field">
+            <label for="years">Years of Service <span class="field-value"></span></label>
+            <input type="number" id="years" value="10" min="5" max="40" step="0.5">
+            <input type="range" id="years_r" min="5" max="40" step="0.5" value="10">
+            <div class="hint">Minimum 5 years of continuous service required</div>
+        </div>
+        <div class="field">
+            <label>Coverage</label>
+            <div class="toggle-group">
+                <input type="radio" name="coverage" id="cov_yes" value="true" checked>
+                <label for="cov_yes">Covered under Act</label>
+                <input type="radio" name="coverage" id="cov_no" value="false">
+                <label for="cov_no">Not covered</label>
+            </div>
+            <div class="hint">Establishments with 10+ employees are covered</div>
+        </div>
+        <button class="btn btn-primary" onclick="calculate()">Calculate Gratuity</button>
+    </div>
+    <div class="calc-results">
+        <h2>Results</h2>
+        <div id="results-placeholder" class="results-placeholder">
+            <div class="icon">🏅</div>
+            <p>Enter your details and click Calculate.</p>
+        </div>
+        <div id="results" style="display:none;">
+            <div id="inflation-bar"></div>
+            <div class="result-hero">
+                <div class="label">Gratuity Amount</div>
+                <div class="value" id="r-gratuity"></div>
+                <div class="sub" id="r-sub"></div>
+            </div>
+            <div class="result-stats">
+                <div class="stat-card green"><div class="label">Tax Exempt</div><div class="value" id="r-exempt"></div></div>
+                <div class="stat-card red"><div class="label">Taxable Amount</div><div class="value" id="r-taxable"></div></div>
+            </div>
+            <div class="info-box">
+                <strong>Formula:</strong><br>
+                <span id="r-formula"></span><br>
+                <strong>Tax exemption limit:</strong> ₹25,00,000
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+syncSlider("salary_r","salary","₹","");
+syncSlider("years_r","years","","yrs");
+
+async function calculate() {
+    const covered = document.getElementById("cov_yes").checked;
+    const data = {
+        last_drawn_salary: +document.getElementById("salary").value,
+        years_of_service: +document.getElementById("years").value,
+        is_covered_under_act: covered,
+        inflation_rate: getInflationRate(),
+    };
+    const res = await postCalc("/finance/api/gratuity", data);
+    if (res.status !== "success") return alert(res.message);
+    showResults("results");
+    document.getElementById("inflation-bar").innerHTML = inflationHTML();
+    setupInflationToggle(calculate);
+
+    const d = getDisplayData(res.data);
+    document.getElementById("r-gratuity").textContent = formatINR(d.gratuity_amount);
+    document.getElementById("r-sub").textContent = _inflationOn ? "Inflation-adjusted value" : "";
+    document.getElementById("r-exempt").textContent = formatINR(d.tax_exempt_amount);
+    document.getElementById("r-taxable").textContent = formatINR(d.taxable_amount);
+    const div = d.is_covered_under_act ? 26 : 30;
+    document.getElementById("r-formula").textContent =
+        `(15 × ${formatINR(d.last_drawn_salary)} × ${d.years_of_service}) ÷ ${div} = ${formatINR(d.gratuity_amount)}`;
+}
+</script>
+{% endblock %}

@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}BMI Calculator — CalcHub{% endblock %}
+{% block content %}
+<div class="breadcrumb">
+    <a href="/">Home</a><span class="sep">/</span><a href="/health">Health</a><span class="sep">/</span><span class="current">BMI Calculator</span>
+</div>
+<div class="page-header">
+    <h1>BMI Calculator</h1>
+    <p>Body Mass Index with WHO classification and ideal weight range</p>
+</div>
+<div class="calc-layout">
+    <div class="calc-form">
+        <h2>Enter Details</h2>
+        <div class="field">
+            <label for="weight">Weight <span class="field-value"></span></label>
+            <div class="input-wrap"><input type="number" id="weight" value="70" min="20" max="300" step="0.5"><span class="suffix">kg</span></div>
+            <input type="range" id="weight_r" min="30" max="200" step="0.5" value="70">
+        </div>
+        <div class="field">
+            <label for="height">Height <span class="field-value"></span></label>
+            <div class="input-wrap"><input type="number" id="height" value="170" min="100" max="250" step="1"><span class="suffix">cm</span></div>
+            <input type="range" id="height_r" min="100" max="220" step="1" value="170">
+        </div>
+        <button class="btn btn-primary" onclick="calculate()">Calculate BMI</button>
+    </div>
+    <div class="calc-results">
+        <h2>Results</h2>
+        <div id="results-placeholder" class="results-placeholder">
+            <div class="icon">⚖️</div>
+            <p>Enter your weight and height to calculate BMI.</p>
+        </div>
+        <div id="results" style="display:none;">
+            <div class="result-hero" id="r-hero">
+                <div class="label">Your BMI</div>
+                <div class="value" id="r-bmi"></div>
+                <div class="sub" id="r-category"></div>
+            </div>
+            <div class="result-stats">
+                <div class="stat-card"><div class="label">Health Risk</div><div class="value" style="font-size:.85rem;" id="r-risk"></div></div>
+                <div class="stat-card green"><div class="label">Ideal Weight Range</div><div class="value" style="font-size:.85rem;" id="r-ideal"></div></div>
+            </div>
+            <div class="info-box">
+                <strong>BMI Scale:</strong><br>
+                &lt; 18.5 Underweight &bull; 18.5–24.9 Normal &bull; 25–29.9 Overweight &bull; 30+ Obese<br>
+                <span style="font-size:.75rem; color:var(--text-muted);">Note: BMI doesn't account for muscle mass, bone density, or body composition.</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+syncSlider("weight_r","weight","","kg");
+syncSlider("height_r","height","","cm");
+
+async function calculate() {
+    const data = { weight_kg: +document.getElementById("weight").value, height_cm: +document.getElementById("height").value };
+    const res = await postCalc("/health/api/bmi", data);
+    if (res.status !== "success") return alert(res.message);
+    const d = res.data;
+    showResults("results");
+    document.getElementById("r-bmi").textContent = d.bmi;
+    document.getElementById("r-category").textContent = d.category;
+    document.getElementById("r-risk").textContent = d.health_risk;
+    document.getElementById("r-ideal").textContent = d.ideal_weight_low + " – " + d.ideal_weight_high + " kg";
+
+    const hero = document.getElementById("r-hero");
+    hero.style.background = d.bmi < 18.5 ? "var(--blue-light)" : d.bmi < 25 ? "var(--green-light)" : d.bmi < 30 ? "var(--orange-light)" : "var(--red-light)";
+    const color = d.bmi < 18.5 ? "var(--blue)" : d.bmi < 25 ? "var(--green)" : d.bmi < 30 ? "var(--orange)" : "var(--red)";
+    hero.querySelector(".value").style.color = color;
+    hero.querySelector(".label").style.color = color;
+}
+</script>
+{% endblock %}

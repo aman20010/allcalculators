@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block title %}HbA1c ↔ Blood Sugar — CalcHub{% endblock %}
+{% block content %}
+<div class="breadcrumb">
+    <a href="/">Home</a><span class="sep">/</span><a href="/health">Health</a><span class="sep">/</span><span class="current">HbA1c ↔ Blood Sugar</span>
+</div>
+<div class="page-header">
+    <h1>HbA1c ↔ Average Blood Sugar Converter</h1>
+    <p>Convert between HbA1c percentage and estimated average glucose (ADAG formula)</p>
+</div>
+<div class="calc-layout">
+    <div class="calc-form">
+        <h2>Enter Value</h2>
+        <div class="field">
+            <label>Conversion Direction</label>
+            <div class="toggle-group">
+                <input type="radio" name="direction" id="d_hba1c" value="hba1c" checked>
+                <label for="d_hba1c">HbA1c → Glucose</label>
+                <input type="radio" name="direction" id="d_glucose" value="glucose">
+                <label for="d_glucose">Glucose → HbA1c</label>
+            </div>
+        </div>
+        <div class="field" id="hba1c-field">
+            <label for="hba1c">HbA1c <span class="field-value"></span></label>
+            <div class="input-wrap"><input type="number" id="hba1c" value="5.7" min="3" max="15" step="0.1"><span class="suffix">%</span></div>
+            <input type="range" id="hba1c_r" min="4" max="14" step="0.1" value="5.7">
+        </div>
+        <div class="field" id="glucose-field" style="display:none;">
+            <label for="avg_glucose">Average Blood Glucose <span class="field-value"></span></label>
+            <div class="input-wrap"><input type="number" id="avg_glucose" value="120" min="50" max="500" step="1"><span class="suffix">mg/dL</span></div>
+            <input type="range" id="avg_glucose_r" min="60" max="400" step="1" value="120">
+        </div>
+        <button class="btn btn-primary" onclick="calculate()">Convert</button>
+    </div>
+    <div class="calc-results">
+        <h2>Results</h2>
+        <div id="results-placeholder" class="results-placeholder">
+            <div class="icon">🔬</div>
+            <p>Enter your HbA1c or average glucose value.</p>
+        </div>
+        <div id="results" style="display:none;">
+            <div class="result-hero" id="r-hero">
+                <div class="label" id="r-label"></div>
+                <div class="value" id="r-value"></div>
+                <div class="sub" id="r-category"></div>
+            </div>
+            <div class="result-stats" id="r-extra-stats"></div>
+            <div class="info-box">
+                <strong>ADAG Formula:</strong> eAG (mg/dL) = 28.7 × HbA1c − 46.7<br>
+                <strong>Categories:</strong> &lt;5.7% Normal &bull; 5.7–6.4% Pre-Diabetic &bull; ≥6.5% Diabetic<br>
+                <span style="font-size:.75rem; color:var(--text-muted);">HbA1c reflects average blood sugar over ~3 months.</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+syncSlider("hba1c_r","hba1c","","% HbA1c");
+syncSlider("avg_glucose_r","avg_glucose","","mg/dL");
+
+document.querySelectorAll('input[name="direction"]').forEach(r => r.addEventListener("change", () => {
+    const isHba1c = document.getElementById("d_hba1c").checked;
+    document.getElementById("hba1c-field").style.display = isHba1c ? "block" : "none";
+    document.getElementById("glucose-field").style.display = isHba1c ? "none" : "block";
+}));
+
+async function calculate() {
+    const isHba1c = document.getElementById("d_hba1c").checked;
+    const data = isHba1c
+        ? { hba1c: +document.getElementById("hba1c").value }
+        : { avg_glucose: +document.getElementById("avg_glucose").value };
+    const res = await postCalc("/health/api/hba1c", data);
+    if (res.status !== "success") return alert(res.message);
+    const d = res.data;
+    showResults("results");
+
+    const hero = document.getElementById("r-hero");
+    if (d.direction === "hba1c_to_glucose") {
+        document.getElementById("r-label").textContent = "Estimated Avg. Glucose";
+        document.getElementById("r-value").textContent = d.estimated_avg_glucose_mg_dl + " mg/dL";
+        document.getElementById("r-extra-stats").innerHTML =
+            `<div class="stat-card"><div class="label">HbA1c</div><div class="value">${d.hba1c}%</div></div>
+             <div class="stat-card"><div class="label">In mmol/L</div><div class="value">${d.estimated_avg_glucose_mmol_l}</div></div>`;
+    } else {
+        document.getElementById("r-label").textContent = "Estimated HbA1c";
+        document.getElementById("r-value").textContent = d.estimated_hba1c + "%";
+        document.getElementById("r-extra-stats").innerHTML =
+            `<div class="stat-card"><div class="label">Avg Glucose</div><div class="value">${d.avg_glucose_mg_dl} mg/dL</div></div>`;
+    }
+    document.getElementById("r-category").textContent = d.category;
+
+    const hba1cVal = d.hba1c || d.estimated_hba1c;
+    const color = hba1cVal < 5.7 ? "var(--green)" : hba1cVal < 6.5 ? "var(--orange)" : "var(--red)";
+    const bg = hba1cVal < 5.7 ? "var(--green-light)" : hba1cVal < 6.5 ? "var(--orange-light)" : "var(--red-light)";
+    hero.style.background = bg;
+    hero.querySelector(".value").style.color = color;
+    hero.querySelector(".label").style.color = color;
+}
+</script>
+{% endblock %}

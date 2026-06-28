@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% block title %}Retirement Calculator — CalcHub{% endblock %}
+{% block content %}
+<div class="breadcrumb">
+    <a href="/">Home</a><span class="sep">/</span><a href="/finance">Finance</a><span class="sep">/</span><span class="current">Retirement Calculator</span>
+</div>
+<div class="page-header">
+    <h1>Retirement Calculator</h1>
+    <p>How much corpus you need and how much to save monthly to retire comfortably</p>
+</div>
+<div class="calc-layout">
+    <div class="calc-form">
+        <h2>Enter Details</h2>
+        <div class="field-row">
+            <div class="field">
+                <label for="current_age">Current Age <span class="field-value"></span></label>
+                <input type="number" id="current_age" value="30" min="18" max="60">
+                <input type="range" id="current_age_r" min="18" max="60" step="1" value="30">
+            </div>
+            <div class="field">
+                <label for="retirement_age">Retirement Age <span class="field-value"></span></label>
+                <input type="number" id="retirement_age" value="60" min="40" max="70">
+                <input type="range" id="retirement_age_r" min="40" max="70" step="1" value="60">
+            </div>
+        </div>
+        <div class="field">
+            <label for="life_expectancy">Life Expectancy <span class="field-value"></span></label>
+            <input type="number" id="life_expectancy" value="80" min="60" max="100">
+            <input type="range" id="life_expectancy_r" min="65" max="100" step="1" value="80">
+        </div>
+        <div class="field">
+            <label for="monthly_expenses">Current Monthly Expenses <span class="field-value"></span></label>
+            <div class="input-wrap"><span class="prefix">₹</span><input type="number" id="monthly_expenses" class="has-prefix" value="50000" min="5000"></div>
+            <input type="range" id="monthly_expenses_r" min="10000" max="500000" step="5000" value="50000">
+        </div>
+        <div class="field-row">
+            <div class="field">
+                <label for="return_pre">Return (Pre-Retire) <span class="field-value"></span></label>
+                <div class="input-wrap"><input type="number" id="return_pre" value="12" min="1" max="25" step="0.5"><span class="suffix">%</span></div>
+                <input type="range" id="return_pre_r" min="4" max="20" step="0.5" value="12">
+            </div>
+            <div class="field">
+                <label for="return_post">Return (Post-Retire) <span class="field-value"></span></label>
+                <div class="input-wrap"><input type="number" id="return_post" value="8" min="1" max="15" step="0.5"><span class="suffix">%</span></div>
+                <input type="range" id="return_post_r" min="4" max="15" step="0.5" value="8">
+            </div>
+        </div>
+        <div class="field">
+            <label for="existing_corpus">Existing Savings / Corpus <span class="field-value"></span></label>
+            <div class="input-wrap"><span class="prefix">₹</span><input type="number" id="existing_corpus" class="has-prefix" value="0" min="0"></div>
+        </div>
+        <div class="info-box" style="margin-bottom:1rem;">
+            <strong>Note:</strong> Assumes 6% annual inflation. Post-retirement returns are adjusted for inflation internally.
+        </div>
+        <button class="btn btn-primary" onclick="calculate()">Calculate Retirement Plan</button>
+    </div>
+    <div class="calc-results">
+        <h2>Results</h2>
+        <div id="results-placeholder" class="results-placeholder">
+            <div class="icon">🌴</div>
+            <p>Enter your details and click Calculate.</p>
+        </div>
+        <div id="results" style="display:none;">
+            <div class="result-hero">
+                <div class="label">Retirement Corpus Needed</div>
+                <div class="value" id="r-corpus"></div>
+            </div>
+            <div class="result-hero" style="background: linear-gradient(135deg, var(--green-light), #d1fae5); margin-top:.5rem;">
+                <div class="label" style="color:var(--green);">Monthly Saving Required</div>
+                <div class="value" style="color:var(--green);" id="r-monthly"></div>
+                <div class="sub">Start saving this much every month to retire on time</div>
+            </div>
+            <div class="result-stats" style="margin-top:1rem;">
+                <div class="stat-card orange"><div class="label">Future Monthly Expenses</div><div class="value" id="r-future-exp"></div></div>
+                <div class="stat-card blue"><div class="label">Existing Corpus (FV)</div><div class="value" id="r-existing-fv"></div></div>
+                <div class="stat-card red"><div class="label">Gap to Fill</div><div class="value" id="r-gap"></div></div>
+                <div class="stat-card"><div class="label">Yearly Saving Required</div><div class="value" id="r-yearly"></div></div>
+            </div>
+            <div class="info-box">
+                <strong>Time to retire:</strong> <span id="r-years-to"></span> years<br>
+                <strong>Years in retirement:</strong> <span id="r-years-in"></span> years
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+syncSlider("current_age_r","current_age","","yrs");
+syncSlider("retirement_age_r","retirement_age","","yrs");
+syncSlider("life_expectancy_r","life_expectancy","","yrs");
+syncSlider("monthly_expenses_r","monthly_expenses","₹","");
+syncSlider("return_pre_r","return_pre","","% p.a.");
+syncSlider("return_post_r","return_post","","% p.a.");
+
+async function calculate() {
+    const data = {
+        current_age: +document.getElementById("current_age").value,
+        retirement_age: +document.getElementById("retirement_age").value,
+        life_expectancy: +document.getElementById("life_expectancy").value,
+        monthly_expenses: +document.getElementById("monthly_expenses").value,
+        expected_return_pre: +document.getElementById("return_pre").value,
+        expected_return_post: +document.getElementById("return_post").value,
+        existing_corpus: +document.getElementById("existing_corpus").value,
+    };
+    const res = await postCalc("/finance/api/retirement", data);
+    if (res.status !== "success") return alert(res.message);
+    const d = res.data;
+    showResults("results");
+
+    document.getElementById("r-corpus").textContent = formatINR(d.corpus_needed);
+    document.getElementById("r-monthly").textContent = formatINR(d.monthly_saving_required);
+    document.getElementById("r-future-exp").textContent = formatINR(d.future_monthly_expenses);
+    document.getElementById("r-existing-fv").textContent = formatINR(d.existing_corpus_future_value);
+    document.getElementById("r-gap").textContent = formatINR(d.gap);
+    document.getElementById("r-yearly").textContent = formatINR(d.yearly_saving_required);
+    document.getElementById("r-years-to").textContent = d.years_to_retire;
+    document.getElementById("r-years-in").textContent = d.years_in_retirement;
+}
+</script>
+{% endblock %}

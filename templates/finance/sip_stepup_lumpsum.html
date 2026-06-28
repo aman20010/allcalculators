@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+{% block title %}SIP Step-Up + Lumpsum — CalcHub{% endblock %}
+{% block head %}<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>{% endblock %}
+{% block content %}
+<div class="breadcrumb">
+    <a href="/">Home</a><span class="sep">/</span><a href="/finance">Finance</a><span class="sep">/</span><span class="current">SIP Step-Up + Lumpsum</span>
+</div>
+<div class="page-header">
+    <h1>SIP Step-Up + Lumpsum Calculator</h1>
+    <p>Combine a one-time lumpsum with an annually increasing SIP</p>
+</div>
+<div class="calc-layout">
+    <div class="calc-form">
+        <h2>Enter Details</h2>
+        <div class="field">
+            <label for="lumpsum">Initial Lumpsum <span class="field-value"></span></label>
+            <div class="input-wrap"><span class="prefix">₹</span><input type="number" id="lumpsum" class="has-prefix" value="100000" min="0"></div>
+            <input type="range" id="lumpsum_r" min="0" max="5000000" step="10000" value="100000">
+        </div>
+        <div class="field">
+            <label for="monthly">Starting Monthly SIP <span class="field-value"></span></label>
+            <div class="input-wrap"><span class="prefix">₹</span><input type="number" id="monthly" class="has-prefix" value="10000" min="500"></div>
+            <input type="range" id="monthly_r" min="500" max="200000" step="500" value="10000">
+        </div>
+        <div class="field-row">
+            <div class="field">
+                <label for="stepup">Annual Step-Up <span class="field-value"></span></label>
+                <div class="input-wrap"><input type="number" id="stepup" value="10" min="0" max="50"><span class="suffix">%</span></div>
+                <input type="range" id="stepup_r" min="0" max="50" step="1" value="10">
+            </div>
+            <div class="field">
+                <label for="return_rate">Expected Return <span class="field-value"></span></label>
+                <div class="input-wrap"><input type="number" id="return_rate" value="12" min="1" max="30" step="0.5"><span class="suffix">% p.a.</span></div>
+                <input type="range" id="return_rate_r" min="1" max="30" step="0.5" value="12">
+            </div>
+        </div>
+        <div class="field">
+            <label for="years">Time Period <span class="field-value"></span></label>
+            <input type="number" id="years" value="15" min="1" max="40">
+            <input type="range" id="years_r" min="1" max="40" step="1" value="15">
+        </div>
+        <button class="btn btn-primary" onclick="calculate()">Calculate</button>
+    </div>
+    <div class="calc-results">
+        <h2>Results</h2>
+        <div id="results-placeholder" class="results-placeholder">
+            <div class="icon">💰</div>
+            <p>Enter your details and click Calculate.</p>
+        </div>
+        <div id="results" style="display:none;">
+            <div id="inflation-bar"></div>
+            <div class="result-hero">
+                <div class="label">Total Value</div>
+                <div class="value" id="r-total"></div>
+                <div class="sub" id="r-sub"></div>
+            </div>
+            <div class="chart-container"><canvas id="chart"></canvas></div>
+            <div class="result-stats">
+                <div class="stat-card"><div class="label">Amount Invested</div><div class="value" id="r-invested"></div></div>
+                <div class="stat-card green"><div class="label">Estimated Returns</div><div class="value" id="r-returns"></div></div>
+                <div class="stat-card purple"><div class="label">Lumpsum Growth</div><div class="value" id="r-lumpsum"></div></div>
+                <div class="stat-card orange"><div class="label">SIP Corpus</div><div class="value" id="r-sip"></div></div>
+            </div>
+            <details class="breakdown">
+                <summary>Year-by-year breakdown (SIP portion)</summary>
+                <table>
+                    <thead><tr><th>Year</th><th>Monthly SIP</th><th>Invested</th><th>Gain</th><th>SIP Corpus</th></tr></thead>
+                    <tbody id="r-table"></tbody>
+                </table>
+            </details>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+let chart;
+syncSlider("lumpsum_r","lumpsum","₹","");
+syncSlider("monthly_r","monthly","₹","");
+syncSlider("stepup_r","stepup","","% p.a.");
+syncSlider("return_rate_r","return_rate","","% p.a.");
+syncSlider("years_r","years","","yrs");
+
+async function calculate() {
+    const data = {
+        initial_lumpsum: +document.getElementById("lumpsum").value,
+        monthly_investment: +document.getElementById("monthly").value,
+        expected_return_rate: +document.getElementById("return_rate").value,
+        time_years: +document.getElementById("years").value,
+        annual_stepup_percent: +document.getElementById("stepup").value,
+        inflation_rate: getInflationRate(),
+    };
+    const res = await postCalc("/finance/api/sip-stepup-lumpsum", data);
+    if (res.status !== "success") return alert(res.message);
+    showResults("results");
+    document.getElementById("inflation-bar").innerHTML = inflationHTML();
+    setupInflationToggle(calculate);
+
+    const d = getDisplayData(res.data);
+    document.getElementById("r-total").textContent = formatINR(d.total_value);
+    document.getElementById("r-sub").textContent = _inflationOn ? "Inflation-adjusted value" : "";
+    document.getElementById("r-invested").textContent = formatINR(d.invested_amount);
+    document.getElementById("r-returns").textContent = formatINR(d.estimated_returns);
+    document.getElementById("r-lumpsum").textContent = formatINR(d.lumpsum_growth);
+    document.getElementById("r-sip").textContent = formatINR(d.sip_corpus);
+
+    document.getElementById("r-table").innerHTML = d.yearly_breakdown.map(r =>
+        `<tr><td>${r.year}</td><td>${formatINR(r.monthly_sip)}</td><td>${formatINR(r.yearly_invested)}</td><td>${formatINR(r.gain_this_year)}</td><td>${formatINR(r.corpus_at_year_end)}</td></tr>`
+    ).join("");
+
+    if (chart) chart.destroy();
+    chart = new Chart(document.getElementById("chart"), {
+        type: "doughnut",
+        data: {
+            labels: ["Lumpsum Growth", "SIP Invested", "SIP Returns"],
+            datasets: [{ data: [d.lumpsum_growth, d.invested_amount - d.initial_lumpsum, d.sip_corpus - (d.invested_amount - d.initial_lumpsum)],
+                backgroundColor: ["#7c3aed", "#4f46e5", "#059669"], borderWidth: 0, borderRadius: 4 }]
+        },
+        options: { responsive: true, cutout: "65%", plugins: { legend: { position: "bottom", labels: { padding: 10, usePointStyle: true, pointStyle: "circle", font: { size: 11, family: "Inter" } } } } }
+    });
+}
+</script>
+{% endblock %}

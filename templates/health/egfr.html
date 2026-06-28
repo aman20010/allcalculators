@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block title %}eGFR Calculator — CalcHub{% endblock %}
+{% block content %}
+<div class="breadcrumb">
+    <a href="/">Home</a><span class="sep">/</span><a href="/health">Health</a><span class="sep">/</span><span class="current">eGFR Calculator</span>
+</div>
+<div class="page-header">
+    <h1>eGFR Calculator</h1>
+    <p>Estimated Glomerular Filtration Rate — kidney function assessment (CKD-EPI 2021)</p>
+</div>
+<div class="calc-layout">
+    <div class="calc-form">
+        <h2>Enter Blood Report Values</h2>
+        <div class="field">
+            <label for="creatinine">Serum Creatinine <span class="field-value"></span></label>
+            <div class="input-wrap"><input type="number" id="creatinine" value="1.0" min="0.1" max="15" step="0.01"><span class="suffix">mg/dL</span></div>
+            <input type="range" id="creatinine_r" min="0.3" max="8" step="0.01" value="1.0">
+        </div>
+        <div class="field">
+            <label for="age">Age <span class="field-value"></span></label>
+            <input type="number" id="age" value="35" min="18" max="90">
+            <input type="range" id="age_r" min="18" max="90" step="1" value="35">
+        </div>
+        <div class="field">
+            <label>Gender</label>
+            <div class="toggle-group">
+                <input type="radio" name="gender" id="g_male" value="male" checked>
+                <label for="g_male">Male</label>
+                <input type="radio" name="gender" id="g_female" value="female">
+                <label for="g_female">Female</label>
+            </div>
+        </div>
+        <button class="btn btn-primary" onclick="calculate()">Calculate eGFR</button>
+    </div>
+    <div class="calc-results">
+        <h2>Results</h2>
+        <div id="results-placeholder" class="results-placeholder">
+            <div class="icon">🫘</div>
+            <p>Enter your serum creatinine from your blood report.</p>
+        </div>
+        <div id="results" style="display:none;">
+            <div class="result-hero" id="r-hero">
+                <div class="label">eGFR</div>
+                <div class="value" id="r-egfr"></div>
+                <div class="sub" id="r-unit"></div>
+            </div>
+            <div class="result-stats">
+                <div class="stat-card" id="r-stage-card"><div class="label">CKD Stage</div><div class="value" style="font-size:.8rem;" id="r-stage"></div></div>
+            </div>
+            <div class="info-box" id="r-desc"></div>
+            <div class="info-box" style="margin-top:.75rem;">
+                <strong>CKD Stages:</strong><br>
+                G1: ≥90 (Normal) &bull; G2: 60–89 (Mild↓) &bull; G3a: 45–59 &bull; G3b: 30–44 &bull; G4: 15–29 (Severe↓) &bull; G5: &lt;15 (Failure)<br>
+                <span style="font-size:.75rem; color:var(--text-muted);">Uses CKD-EPI 2021 race-free equation. Consult your doctor for clinical interpretation.</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+syncSlider("creatinine_r","creatinine","","mg/dL");
+syncSlider("age_r","age","","yrs");
+
+async function calculate() {
+    const data = {
+        creatinine: +document.getElementById("creatinine").value,
+        age: +document.getElementById("age").value,
+        gender: document.getElementById("g_male").checked ? "male" : "female",
+    };
+    const res = await postCalc("/health/api/egfr", data);
+    if (res.status !== "success") return alert(res.message);
+    const d = res.data;
+    showResults("results");
+    document.getElementById("r-egfr").textContent = d.egfr;
+    document.getElementById("r-unit").textContent = d.unit;
+    document.getElementById("r-stage").textContent = d.stage;
+    document.getElementById("r-desc").innerHTML = "<strong>Interpretation:</strong> " + d.description;
+
+    const hero = document.getElementById("r-hero");
+    const color = d.egfr >= 90 ? "var(--green)" : d.egfr >= 60 ? "var(--blue)" : d.egfr >= 30 ? "var(--orange)" : "var(--red)";
+    const bg = d.egfr >= 90 ? "var(--green-light)" : d.egfr >= 60 ? "var(--blue-light)" : d.egfr >= 30 ? "var(--orange-light)" : "var(--red-light)";
+    hero.style.background = bg;
+    hero.querySelector(".value").style.color = color;
+    hero.querySelector(".label").style.color = color;
+}
+</script>
+{% endblock %}

@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% block title %}PPF Calculator — CalcHub{% endblock %}
+{% block head %}<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>{% endblock %}
+{% block content %}
+<div class="breadcrumb">
+    <a href="/">Home</a><span class="sep">/</span><a href="/finance">Finance</a><span class="sep">/</span><span class="current">PPF Calculator</span>
+</div>
+<div class="page-header">
+    <h1>PPF Calculator</h1>
+    <p>Public Provident Fund — tax-free government-backed savings scheme</p>
+</div>
+<div class="calc-layout">
+    <div class="calc-form">
+        <h2>Enter Details</h2>
+        <div class="field">
+            <label for="yearly">Yearly Investment <span class="field-value"></span></label>
+            <div class="input-wrap"><span class="prefix">₹</span><input type="number" id="yearly" class="has-prefix" value="150000" min="500" max="150000"></div>
+            <input type="range" id="yearly_r" min="500" max="150000" step="500" value="150000">
+            <div class="hint">Max ₹1,50,000 per year</div>
+        </div>
+        <div class="field">
+            <label for="interest_rate">PPF Interest Rate <span class="field-value"></span></label>
+            <div class="input-wrap"><input type="number" id="interest_rate" value="7.1" min="1" max="12" step="0.1"><span class="suffix">% p.a.</span></div>
+            <input type="range" id="interest_rate_r" min="5" max="10" step="0.1" value="7.1">
+            <div class="hint">Current rate: 7.1% (Q1 FY 2025-26)</div>
+        </div>
+        <div class="field">
+            <label for="years">Time Period <span class="field-value"></span></label>
+            <input type="number" id="years" value="15" min="15" max="50" step="5">
+            <input type="range" id="years_r" min="15" max="50" step="5" value="15">
+            <div class="hint">Minimum 15 years, extendable in blocks of 5</div>
+        </div>
+        <button class="btn btn-primary" onclick="calculate()">Calculate PPF</button>
+    </div>
+    <div class="calc-results">
+        <h2>Results</h2>
+        <div id="results-placeholder" class="results-placeholder">
+            <div class="icon">🏛️</div>
+            <p>Enter your details and click Calculate.</p>
+        </div>
+        <div id="results" style="display:none;">
+            <div id="inflation-bar"></div>
+            <div class="result-hero">
+                <div class="label">Maturity Amount</div>
+                <div class="value" id="r-maturity"></div>
+                <div class="sub" id="r-sub"></div>
+            </div>
+            <div class="chart-container"><canvas id="chart"></canvas></div>
+            <div class="result-stats">
+                <div class="stat-card"><div class="label">Total Invested</div><div class="value" id="r-invested"></div></div>
+                <div class="stat-card green"><div class="label">Total Interest</div><div class="value" id="r-interest"></div></div>
+            </div>
+            <div class="info-box" style="margin-bottom:.75rem;">
+                <strong>Tax benefit:</strong> Investment qualifies for Section 80C deduction. Interest and maturity are fully tax-free.
+            </div>
+            <details class="breakdown">
+                <summary>Year-by-year breakdown</summary>
+                <table>
+                    <thead><tr><th>Year</th><th>Deposit</th><th>Interest</th><th>Balance</th></tr></thead>
+                    <tbody id="r-table"></tbody>
+                </table>
+            </details>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+let chart;
+syncSlider("yearly_r","yearly","₹","");
+syncSlider("interest_rate_r","interest_rate","","% p.a.");
+syncSlider("years_r","years","","yrs");
+
+async function calculate() {
+    const data = {
+        yearly_investment: +document.getElementById("yearly").value,
+        ppf_interest_rate: +document.getElementById("interest_rate").value,
+        time_years: +document.getElementById("years").value,
+        inflation_rate: getInflationRate(),
+    };
+    const res = await postCalc("/finance/api/ppf", data);
+    if (res.status !== "success") return alert(res.message);
+    showResults("results");
+    document.getElementById("inflation-bar").innerHTML = inflationHTML();
+    setupInflationToggle(calculate);
+
+    const d = getDisplayData(res.data);
+    document.getElementById("r-maturity").textContent = formatINR(d.maturity_amount);
+    document.getElementById("r-sub").textContent = _inflationOn ? "Inflation-adjusted value" : "";
+    document.getElementById("r-invested").textContent = formatINR(d.total_invested);
+    document.getElementById("r-interest").textContent = formatINR(d.total_interest);
+
+    document.getElementById("r-table").innerHTML = d.yearly_breakdown.map(r =>
+        `<tr><td>${r.year}</td><td>${formatINR(r.deposit)}</td><td>${formatINR(r.interest_earned)}</td><td>${formatINR(r.balance)}</td></tr>`
+    ).join("");
+
+    if (chart) chart.destroy();
+    chart = new Chart(document.getElementById("chart"), {
+        type: "doughnut",
+        data: { labels: ["Invested", "Interest"], datasets: [{ data: [d.total_invested, d.total_interest], backgroundColor: ["#4f46e5", "#059669"], borderWidth: 0, borderRadius: 4 }] },
+        options: { responsive: true, cutout: "65%", plugins: { legend: { position: "bottom", labels: { padding: 10, usePointStyle: true, pointStyle: "circle", font: { size: 11, family: "Inter" } } } } }
+    });
+}
+</script>
+{% endblock %}

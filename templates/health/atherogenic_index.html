@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}Atherogenic Index (AIP) — CalcHub{% endblock %}
+{% block content %}
+<div class="breadcrumb">
+    <a href="/">Home</a><span class="sep">/</span><a href="/health">Health</a><span class="sep">/</span><span class="current">Atherogenic Index</span>
+</div>
+<div class="page-header">
+    <h1>Atherogenic Index of Plasma (AIP)</h1>
+    <p>Cardiovascular risk assessment from triglycerides and HDL</p>
+</div>
+<div class="calc-layout">
+    <div class="calc-form">
+        <h2>Enter Lipid Panel Values</h2>
+        <div class="field">
+            <label for="tg">Triglycerides <span class="field-value"></span></label>
+            <div class="input-wrap"><input type="number" id="tg" value="150" min="30" max="600" step="1"><span class="suffix">mg/dL</span></div>
+            <input type="range" id="tg_r" min="30" max="500" step="1" value="150">
+        </div>
+        <div class="field">
+            <label for="hdl">HDL Cholesterol <span class="field-value"></span></label>
+            <div class="input-wrap"><input type="number" id="hdl" value="50" min="10" max="150" step="1"><span class="suffix">mg/dL</span></div>
+            <input type="range" id="hdl_r" min="15" max="120" step="1" value="50">
+        </div>
+        <button class="btn btn-primary" onclick="calculate()">Calculate AIP</button>
+    </div>
+    <div class="calc-results">
+        <h2>Results</h2>
+        <div id="results-placeholder" class="results-placeholder">
+            <div class="icon">❤️‍🔥</div>
+            <p>Enter triglycerides and HDL from your lipid panel.</p>
+        </div>
+        <div id="results" style="display:none;">
+            <div class="result-hero" id="r-hero">
+                <div class="label">Atherogenic Index (AIP)</div>
+                <div class="value" id="r-aip"></div>
+                <div class="sub" id="r-risk"></div>
+            </div>
+            <div class="result-stats">
+                <div class="stat-card"><div class="label">TG/HDL Ratio</div><div class="value" id="r-ratio"></div></div>
+            </div>
+            <div class="info-box">
+                <strong>AIP = log₁₀(TG / HDL)</strong> — both converted to mmol/L<br><br>
+                <strong>Risk categories:</strong><br>
+                &lt; 0.11 — Low cardiovascular risk<br>
+                0.11 – 0.21 — Intermediate risk<br>
+                &gt; 0.21 — High cardiovascular risk<br><br>
+                <span style="font-size:.75rem; color:var(--text-muted);">AIP is a strong predictor of atherosclerosis and coronary artery disease. A lower AIP is better. Consult your cardiologist for clinical interpretation.</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+syncSlider("tg_r","tg","","mg/dL");
+syncSlider("hdl_r","hdl","","mg/dL");
+
+async function calculate() {
+    const data = {
+        triglycerides: +document.getElementById("tg").value,
+        hdl: +document.getElementById("hdl").value,
+    };
+    const res = await postCalc("/health/api/atherogenic-index", data);
+    if (res.status !== "success") return alert(res.message);
+    const d = res.data;
+    if (d.error) return alert(d.error);
+    showResults("results");
+    document.getElementById("r-aip").textContent = d.aip;
+    document.getElementById("r-risk").textContent = d.cardiovascular_risk;
+    document.getElementById("r-ratio").textContent = d.tg_hdl_ratio;
+
+    const hero = document.getElementById("r-hero");
+    const color = d.aip < 0.11 ? "var(--green)" : d.aip < 0.21 ? "var(--orange)" : "var(--red)";
+    const bg = d.aip < 0.11 ? "var(--green-light)" : d.aip < 0.21 ? "var(--orange-light)" : "var(--red-light)";
+    hero.style.background = bg;
+    hero.querySelector(".value").style.color = color;
+    hero.querySelector(".label").style.color = color;
+}
+</script>
+{% endblock %}

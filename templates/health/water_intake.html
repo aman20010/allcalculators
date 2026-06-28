@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}Water Intake Calculator — CalcHub{% endblock %}
+{% block content %}
+<div class="breadcrumb">
+    <a href="/">Home</a><span class="sep">/</span><a href="/health">Health</a><span class="sep">/</span><span class="current">Water Intake</span>
+</div>
+<div class="page-header">
+    <h1>Daily Water Intake Calculator</h1>
+    <p>How much water you should drink based on weight, activity, and climate</p>
+</div>
+<div class="calc-layout">
+    <div class="calc-form">
+        <h2>Enter Details</h2>
+        <div class="field">
+            <label for="weight">Weight <span class="field-value"></span></label>
+            <div class="input-wrap"><input type="number" id="weight" value="70" min="20" max="200" step="0.5"><span class="suffix">kg</span></div>
+            <input type="range" id="weight_r" min="30" max="160" step="0.5" value="70">
+        </div>
+        <div class="field">
+            <label>Activity Level</label>
+            <select id="activity">
+                <option value="sedentary">Sedentary (desk job)</option>
+                <option value="light">Lightly Active</option>
+                <option value="moderate" selected>Moderately Active</option>
+                <option value="active">Very Active</option>
+                <option value="very_active">Extremely Active</option>
+            </select>
+        </div>
+        <div class="field">
+            <label>Climate</label>
+            <div class="toggle-group">
+                <input type="radio" name="climate" id="cl_temp" value="temperate">
+                <label for="cl_temp">Temperate</label>
+                <input type="radio" name="climate" id="cl_hot" value="hot" checked>
+                <label for="cl_hot">Hot</label>
+                <input type="radio" name="climate" id="cl_humid" value="humid">
+                <label for="cl_humid">Humid</label>
+            </div>
+        </div>
+        <button class="btn btn-primary" onclick="calculate()">Calculate</button>
+    </div>
+    <div class="calc-results">
+        <h2>Results</h2>
+        <div id="results-placeholder" class="results-placeholder">
+            <div class="icon">💧</div>
+            <p>Enter your details and click Calculate.</p>
+        </div>
+        <div id="results" style="display:none;">
+            <div class="result-hero" style="background: linear-gradient(135deg, var(--blue-light), #dbeafe);">
+                <div class="label" style="color:var(--blue);">Daily Water Intake</div>
+                <div class="value" style="color:var(--blue);" id="r-litres"></div>
+                <div class="sub" id="r-ml"></div>
+            </div>
+            <div class="result-stats">
+                <div class="stat-card blue"><div class="label">Glasses (250ml)</div><div class="value" id="r-glasses"></div></div>
+            </div>
+            <div class="info-box">
+                <strong>Tips:</strong> Drink more during exercise. If your urine is pale yellow, you're well hydrated. Increase intake if you consume caffeine or alcohol.
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+syncSlider("weight_r","weight","","kg");
+
+async function calculate() {
+    let climate = "hot";
+    if (document.getElementById("cl_temp").checked) climate = "temperate";
+    else if (document.getElementById("cl_humid").checked) climate = "humid";
+    const data = {
+        weight_kg: +document.getElementById("weight").value,
+        activity_level: document.getElementById("activity").value,
+        climate: climate,
+    };
+    const res = await postCalc("/health/api/water-intake", data);
+    if (res.status !== "success") return alert(res.message);
+    const d = res.data;
+    showResults("results");
+    document.getElementById("r-litres").textContent = d.daily_water_litres + " litres";
+    document.getElementById("r-ml").textContent = Math.round(d.daily_water_ml) + " ml/day";
+    document.getElementById("r-glasses").textContent = Math.round(d.glasses_250ml) + " glasses";
+}
+</script>
+{% endblock %}

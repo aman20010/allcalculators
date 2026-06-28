@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block title %}LDL Cholesterol Calculator — CalcHub{% endblock %}
+{% block head %}<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>{% endblock %}
+{% block content %}
+<div class="breadcrumb">
+    <a href="/">Home</a><span class="sep">/</span><a href="/health">Health</a><span class="sep">/</span><span class="current">LDL Cholesterol</span>
+</div>
+<div class="page-header">
+    <h1>LDL Cholesterol Calculator</h1>
+    <p>Friedewald formula — calculate LDL and cardiovascular risk markers from your lipid panel</p>
+</div>
+<div class="calc-layout">
+    <div class="calc-form">
+        <h2>Enter Lipid Panel Values</h2>
+        <div class="field">
+            <label for="tc">Total Cholesterol <span class="field-value"></span></label>
+            <div class="input-wrap"><input type="number" id="tc" value="200" min="50" max="500" step="1"><span class="suffix">mg/dL</span></div>
+            <input type="range" id="tc_r" min="80" max="400" step="1" value="200">
+        </div>
+        <div class="field">
+            <label for="hdl">HDL Cholesterol <span class="field-value"></span></label>
+            <div class="input-wrap"><input type="number" id="hdl" value="50" min="10" max="150" step="1"><span class="suffix">mg/dL</span></div>
+            <input type="range" id="hdl_r" min="15" max="120" step="1" value="50">
+        </div>
+        <div class="field">
+            <label for="tg">Triglycerides <span class="field-value"></span></label>
+            <div class="input-wrap"><input type="number" id="tg" value="150" min="30" max="600" step="1"><span class="suffix">mg/dL</span></div>
+            <input type="range" id="tg_r" min="30" max="500" step="1" value="150">
+            <div class="hint">Formula valid when TG &lt; 400 mg/dL</div>
+        </div>
+        <button class="btn btn-primary" onclick="calculate()">Calculate LDL</button>
+    </div>
+    <div class="calc-results">
+        <h2>Results</h2>
+        <div id="results-placeholder" class="results-placeholder">
+            <div class="icon">🫀</div>
+            <p>Enter your lipid panel values from your blood report.</p>
+        </div>
+        <div id="results" style="display:none;">
+            <div class="result-hero" id="r-hero">
+                <div class="label">Calculated LDL</div>
+                <div class="value" id="r-ldl"></div>
+                <div class="sub" id="r-ldl-cat"></div>
+            </div>
+            <div class="chart-container"><canvas id="chart"></canvas></div>
+            <div class="result-stats">
+                <div class="stat-card"><div class="label">VLDL</div><div class="value" id="r-vldl"></div></div>
+                <div class="stat-card"><div class="label">Non-HDL</div><div class="value" id="r-nonhdl"></div></div>
+                <div class="stat-card"><div class="label">TC:HDL Ratio</div><div class="value" id="r-ratio"></div></div>
+                <div class="stat-card" id="r-risk-card"><div class="label">CV Risk</div><div class="value" id="r-risk"></div></div>
+            </div>
+            <div class="info-box">
+                <strong>LDL targets:</strong> &lt;100 Optimal &bull; 100–129 Near Optimal &bull; 130–159 Borderline &bull; 160–189 High &bull; ≥190 Very High<br>
+                <strong>TC:HDL ratio:</strong> &lt;3.5 Low Risk &bull; 3.5–5.0 Moderate &bull; &gt;5.0 High Risk
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+let chart;
+syncSlider("tc_r","tc","","mg/dL");
+syncSlider("hdl_r","hdl","","mg/dL");
+syncSlider("tg_r","tg","","mg/dL");
+
+async function calculate() {
+    const data = {
+        total_cholesterol: +document.getElementById("tc").value,
+        hdl: +document.getElementById("hdl").value,
+        triglycerides: +document.getElementById("tg").value,
+    };
+    const res = await postCalc("/health/api/ldl", data);
+    if (res.status !== "success") return alert(res.message);
+    const d = res.data;
+    if (d.error) return alert(d.error);
+    showResults("results");
+    document.getElementById("r-ldl").textContent = d.ldl + " mg/dL";
+    document.getElementById("r-ldl-cat").textContent = d.ldl_category;
+    document.getElementById("r-vldl").textContent = d.vldl + " mg/dL";
+    document.getElementById("r-nonhdl").textContent = d.non_hdl + " mg/dL";
+    document.getElementById("r-ratio").textContent = d.tc_hdl_ratio;
+    document.getElementById("r-risk").textContent = d.cardiovascular_risk;
+
+    const hero = document.getElementById("r-hero");
+    const color = d.ldl < 100 ? "var(--green)" : d.ldl < 130 ? "var(--blue)" : d.ldl < 160 ? "var(--orange)" : "var(--red)";
+    const bg = d.ldl < 100 ? "var(--green-light)" : d.ldl < 130 ? "var(--blue-light)" : d.ldl < 160 ? "var(--orange-light)" : "var(--red-light)";
+    hero.style.background = bg;
+    hero.querySelector(".value").style.color = color;
+    hero.querySelector(".label").style.color = color;
+
+    const rc = document.getElementById("r-risk-card");
+    rc.className = "stat-card " + (d.cardiovascular_risk.includes("Low") ? "green" : d.cardiovascular_risk.includes("High") ? "red" : "orange");
+
+    if (chart) chart.destroy();
+    chart = new Chart(document.getElementById("chart"), {
+        type: "doughnut",
+        data: { labels: ["LDL", "HDL", "VLDL"], datasets: [{ data: [d.ldl, d.hdl, d.vldl], backgroundColor: ["#dc2626", "#059669", "#ea580c"], borderWidth: 0, borderRadius: 4 }] },
+        options: { responsive: true, cutout: "65%", plugins: { legend: { position: "bottom", labels: { padding: 10, usePointStyle: true, pointStyle: "circle", font: { size: 11, family: "Inter" } } } } }
+    });
+}
+</script>
+{% endblock %}

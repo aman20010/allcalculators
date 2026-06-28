@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+{% block title %}PF Calculator — CalcHub{% endblock %}
+{% block head %}<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>{% endblock %}
+{% block content %}
+<div class="breadcrumb">
+    <a href="/">Home</a><span class="sep">/</span><a href="/finance">Finance</a><span class="sep">/</span><span class="current">PF Calculator</span>
+</div>
+<div class="page-header">
+    <h1>EPF / PF Calculator</h1>
+    <p>Estimate your Provident Fund maturity amount at retirement</p>
+</div>
+<div class="calc-layout">
+    <div class="calc-form">
+        <h2>Enter Details</h2>
+        <div class="field">
+            <label for="basic_salary">Monthly Basic Salary <span class="field-value"></span></label>
+            <div class="input-wrap"><span class="prefix">₹</span><input type="number" id="basic_salary" class="has-prefix" value="30000" min="1000" max="500000"></div>
+            <input type="range" id="basic_salary_r" min="5000" max="300000" step="1000" value="30000">
+        </div>
+        <div class="field-row">
+            <div class="field">
+                <label for="da_percent">DA <span class="field-value"></span></label>
+                <div class="input-wrap"><input type="number" id="da_percent" value="0" min="0" max="100" step="0.5"><span class="suffix">%</span></div>
+            </div>
+            <div class="field">
+                <label for="current_epf_balance">Current EPF Balance <span class="field-value"></span></label>
+                <div class="input-wrap"><span class="prefix">₹</span><input type="number" id="current_epf_balance" class="has-prefix" value="0" min="0"></div>
+            </div>
+        </div>
+        <div class="field-row">
+            <div class="field">
+                <label for="employee_contrib">Employee Contribution <span class="field-value"></span></label>
+                <div class="input-wrap"><input type="number" id="employee_contrib" value="12" min="0" max="100" step="0.01"><span class="suffix">%</span></div>
+            </div>
+            <div class="field">
+                <label for="employer_contrib">Employer (EPF) <span class="field-value"></span></label>
+                <div class="input-wrap"><input type="number" id="employer_contrib" value="3.67" min="0" max="100" step="0.01"><span class="suffix">%</span></div>
+                <div class="hint">EPF portion of employer's 12%</div>
+            </div>
+        </div>
+        <div class="field-row">
+            <div class="field">
+                <label for="annual_increment">Annual Increment <span class="field-value"></span></label>
+                <div class="input-wrap"><input type="number" id="annual_increment" value="5" min="0" max="30" step="0.5"><span class="suffix">%</span></div>
+                <input type="range" id="annual_increment_r" min="0" max="25" step="0.5" value="5">
+            </div>
+            <div class="field">
+                <label for="years">Years to Retirement <span class="field-value"></span></label>
+                <input type="number" id="years" value="25" min="1" max="45">
+                <input type="range" id="years_r" min="1" max="45" step="1" value="25">
+            </div>
+        </div>
+        <div class="field">
+            <label for="interest_rate">EPF Interest Rate <span class="field-value"></span></label>
+            <div class="input-wrap"><input type="number" id="interest_rate" value="8.25" min="1" max="15" step="0.01"><span class="suffix">%</span></div>
+            <div class="hint">Current rate: 8.25% (FY 2024-25)</div>
+        </div>
+        <button class="btn btn-primary" onclick="calculate()">Calculate PF</button>
+    </div>
+    <div class="calc-results">
+        <h2>Results</h2>
+        <div id="results-placeholder" class="results-placeholder">
+            <div class="icon">🏦</div>
+            <p>Enter your details and click Calculate.</p>
+        </div>
+        <div id="results" style="display:none;">
+            <div id="inflation-bar"></div>
+            <div class="result-hero">
+                <div class="label">Maturity Amount</div>
+                <div class="value" id="r-maturity"></div>
+                <div class="sub" id="r-maturity-sub"></div>
+            </div>
+            <div class="chart-container"><canvas id="chart"></canvas></div>
+            <div class="result-stats">
+                <div class="stat-card"><div class="label">Your Contribution</div><div class="value" id="r-employee"></div></div>
+                <div class="stat-card"><div class="label">Employer's Share</div><div class="value" id="r-employer"></div></div>
+                <div class="stat-card green"><div class="label">Interest Earned</div><div class="value" id="r-interest"></div></div>
+                <div class="stat-card orange"><div class="label">Total Investment</div><div class="value" id="r-invested"></div></div>
+            </div>
+            <details class="breakdown">
+                <summary>Year-by-year breakdown</summary>
+                <table>
+                    <thead><tr><th>Year</th><th>Employee</th><th>Employer</th><th>Interest</th><th>Balance</th></tr></thead>
+                    <tbody id="r-table"></tbody>
+                </table>
+            </details>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+let chart;
+syncSlider("basic_salary_r","basic_salary","₹","");
+syncSlider("annual_increment_r","annual_increment","","% p.a.");
+syncSlider("years_r","years","","yrs");
+
+async function calculate() {
+    const data = {
+        basic_salary: +document.getElementById("basic_salary").value,
+        da_percent: +document.getElementById("da_percent").value,
+        current_epf_balance: +document.getElementById("current_epf_balance").value,
+        employee_contrib_percent: +document.getElementById("employee_contrib").value,
+        employer_contrib_percent: +document.getElementById("employer_contrib").value,
+        annual_increment_percent: +document.getElementById("annual_increment").value,
+        years_to_retirement: +document.getElementById("years").value,
+        epf_interest_rate: +document.getElementById("interest_rate").value,
+        inflation_rate: getInflationRate(),
+    };
+    const res = await postCalc("/finance/api/pf", data);
+    if (res.status !== "success") return alert(res.message);
+    showResults("results");
+    document.getElementById("inflation-bar").innerHTML = inflationHTML();
+    setupInflationToggle(calculate);
+
+    const d = getDisplayData(res.data);
+    document.getElementById("r-maturity").textContent = formatINR(d.maturity_amount);
+    document.getElementById("r-maturity-sub").textContent = _inflationOn ? "Inflation-adjusted value" : "";
+    document.getElementById("r-employee").textContent = formatINR(d.total_employee_contribution);
+    document.getElementById("r-employer").textContent = formatINR(d.total_employer_contribution);
+    document.getElementById("r-interest").textContent = formatINR(d.total_interest_earned);
+    document.getElementById("r-invested").textContent = formatINR(d.total_investment);
+
+    document.getElementById("r-table").innerHTML = d.yearly_breakdown.map(r =>
+        `<tr><td>${r.year}</td><td>${formatINR(r.employee_contribution)}</td><td>${formatINR(r.employer_contribution)}</td><td>${formatINR(r.interest_earned)}</td><td>${formatINR(r.balance)}</td></tr>`
+    ).join("");
+
+    if (chart) chart.destroy();
+    chart = new Chart(document.getElementById("chart"), {
+        type: "doughnut",
+        data: {
+            labels: ["Your Contribution", "Employer", "Interest"],
+            datasets: [{ data: [d.total_employee_contribution, d.total_employer_contribution, d.total_interest_earned],
+                backgroundColor: ["#4f46e5", "#ea580c", "#059669"], borderWidth: 0, borderRadius: 4 }]
+        },
+        options: { responsive: true, cutout: "65%", plugins: { legend: { position: "bottom", labels: { padding: 10, usePointStyle: true, pointStyle: "circle", font: { size: 11, family: "Inter" } } } } }
+    });
+}
+</script>
+{% endblock %}
