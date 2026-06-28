@@ -241,3 +241,6 @@ If prerequisites are missing, an orange "Complete X first" banner guides the use
 | IBW | Devine, Hamwi, Robinson formulas |
 | SIP/Lumpsum | Compound interest with monthly compounding |
 | EMI | Standard reducing-balance formula |
+=======
+# allcalculators
+Fixing the typo
