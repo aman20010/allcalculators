@@ -432,3 +432,312 @@ def calc_retirement(current_age, retirement_age, life_expectancy, monthly_expens
         "expected_return_pre": expected_return_pre,
         "expected_return_post": expected_return_post,
     }
+
+
+# ── New engines ──
+
+def _slab_tax(taxable, slabs):
+    tax = 0.0
+    prev = 0
+    for upper, rate in slabs:
+        if upper is None:
+            tax += max(0, taxable - prev) * rate
+            break
+        if taxable > prev:
+            tax += (min(taxable, upper) - prev) * rate
+        prev = upper
+    return tax
+
+
+def _old_regime_tax(taxable, age_group="below60"):
+    exemption = {"below60": 250000, "60to80": 300000, "above80": 500000}.get(age_group, 250000)
+    if exemption == 500000:
+        slabs = [(500000, 0), (1000000, 0.2), (None, 0.3)]
+    elif exemption == 300000:
+        slabs = [(300000, 0), (500000, 0.05), (1000000, 0.2), (None, 0.3)]
+    else:
+        slabs = [(250000, 0), (500000, 0.05), (1000000, 0.2), (None, 0.3)]
+    tax_raw = _slab_tax(taxable, slabs)
+    rebate = tax_raw if taxable <= 500000 else 0
+    tax = max(0, tax_raw - rebate)
+    cess = tax * 0.04
+    total = tax + cess
+    return {
+        "taxable_income": round(taxable, 2),
+        "tax_before_cess": round(tax, 2),
+        "cess": round(cess, 2),
+        "total_tax": round(total, 2),
+        "rebate_applied": round(rebate, 2),
+        "effective_rate": round((total / taxable * 100) if taxable else 0, 2),
+        "monthly_tax": round(total / 12, 2),
+    }
+
+
+def _new_regime_tax(taxable):
+    slabs = [
+        (400000, 0), (800000, 0.05), (1200000, 0.10),
+        (1600000, 0.15), (2000000, 0.20), (2400000, 0.25), (None, 0.30),
+    ]
+    tax_raw = _slab_tax(taxable, slabs)
+    rebate = tax_raw if taxable <= 1200000 else 0
+    tax = max(0, tax_raw - rebate)
+    cess = tax * 0.04
+    total = tax + cess
+    return {
+        "taxable_income": round(taxable, 2),
+        "tax_before_cess": round(tax, 2),
+        "cess": round(cess, 2),
+        "total_tax": round(total, 2),
+        "rebate_applied": round(rebate, 2),
+        "effective_rate": round((total / taxable * 100) if taxable else 0, 2),
+        "monthly_tax": round(total / 12, 2),
+    }
+
+
+def calc_income_tax(annual_income, deductions_80c=0, hra_exemption=0,
+                    other_deductions=0, age_group="below60", standard_deduction=True):
+    old_taxable = max(0, annual_income
+                      - (50000 if standard_deduction else 0)
+                      - deductions_80c - hra_exemption - other_deductions)
+    new_taxable = max(0, annual_income - (75000 if standard_deduction else 0))
+    old = _old_regime_tax(old_taxable, age_group)
+    new = _new_regime_tax(new_taxable)
+    recommended = "new" if new["total_tax"] <= old["total_tax"] else "old"
+    savings = abs(old["total_tax"] - new["total_tax"])
+    return {
+        "annual_income": round(annual_income, 2),
+        "old_regime": old,
+        "new_regime": new,
+        "recommended_regime": recommended,
+        "tax_savings": round(savings, 2),
+        "in_hand_old": round(annual_income - old["total_tax"], 2),
+        "in_hand_new": round(annual_income - new["total_tax"], 2),
+    }
+
+
+def calc_hra_exemption(basic_salary, hra_received, rent_paid, da=0, is_metro=True):
+    base = basic_salary + da
+    rent_minus_10 = max(0, rent_paid - 0.10 * base)
+    metro_limit = base * (0.50 if is_metro else 0.40)
+    exempt = min(hra_received, rent_minus_10, metro_limit)
+    taxable_hra = max(0, hra_received - exempt)
+    return {
+        "monthly_exempt_hra": round(exempt, 2),
+        "annual_exempt_hra": round(exempt * 12, 2),
+        "monthly_taxable_hra": round(taxable_hra, 2),
+        "annual_taxable_hra": round(taxable_hra * 12, 2),
+        "actual_hra_received": round(hra_received, 2),
+        "rent_minus_10pct_salary": round(rent_minus_10, 2),
+        "metro_limit": round(metro_limit, 2),
+    }
+
+
+def calc_take_home_salary(ctc, bonus=0, basic_percent=50, employer_pf_percent=12,
+                           employee_pf_percent=12, professional_tax=2400,
+                           regime="new", other_deductions=0):
+    fixed_ctc = ctc - bonus
+    basic = fixed_ctc * (basic_percent / 100)
+    employer_pf = basic * (employer_pf_percent / 100)
+    gratuity = basic * 0.0481
+    gross_salary = fixed_ctc - employer_pf - gratuity
+    employee_pf = basic * (employee_pf_percent / 100)
+    taxable_gross = gross_salary - employee_pf - other_deductions
+    tax_result = calc_income_tax(taxable_gross, standard_deduction=True)
+    income_tax = (tax_result["new_regime"]["total_tax"] if regime == "new"
+                  else tax_result["old_regime"]["total_tax"])
+    annual_take_home = gross_salary - employee_pf - professional_tax - income_tax + bonus
+    return {
+        "ctc": round(ctc, 2),
+        "gross_salary": round(gross_salary, 2),
+        "basic_salary": round(basic, 2),
+        "employer_pf": round(employer_pf, 2),
+        "gratuity_contribution": round(gratuity, 2),
+        "employee_pf": round(employee_pf, 2),
+        "professional_tax": round(professional_tax, 2),
+        "income_tax": round(income_tax, 2),
+        "bonus": round(bonus, 2),
+        "annual_take_home": round(annual_take_home, 2),
+        "monthly_take_home": round(annual_take_home / 12, 2),
+        "regime": regime,
+        "monthly_gross": round(gross_salary / 12, 2),
+    }
+
+
+def calc_gst(amount, gst_rate=18, calculation_type="exclusive"):
+    rate = gst_rate / 100
+    if calculation_type == "exclusive":
+        gst_amount = amount * rate
+        base = amount
+        total = amount + gst_amount
+    else:
+        base = amount / (1 + rate)
+        gst_amount = amount - base
+        total = amount
+    return {
+        "base_amount": round(base, 2),
+        "gst_amount": round(gst_amount, 2),
+        "cgst": round(gst_amount / 2, 2),
+        "sgst": round(gst_amount / 2, 2),
+        "total_amount": round(total, 2),
+        "gst_rate": gst_rate,
+        "calculation_type": calculation_type,
+    }
+
+
+def calc_nps(monthly_contribution, current_age, retirement_age=60,
+             expected_return_rate=10, annuity_percent=40, annuity_rate=6):
+    months = (retirement_age - current_age) * 12
+    monthly_rate = expected_return_rate / 100 / 12
+    if monthly_rate == 0:
+        corpus = monthly_contribution * months
+    else:
+        corpus = monthly_contribution * (((1 + monthly_rate) ** months - 1) / monthly_rate) * (1 + monthly_rate)
+    total_invested = monthly_contribution * months
+    lump_sum = corpus * (1 - annuity_percent / 100)
+    annuity_corpus = corpus * (annuity_percent / 100)
+    monthly_pension = annuity_corpus * (annuity_rate / 100) / 12
+    return {
+        "total_corpus": round(corpus, 2),
+        "total_invested": round(total_invested, 2),
+        "estimated_returns": round(corpus - total_invested, 2),
+        "lump_sum_withdrawal": round(lump_sum, 2),
+        "annuity_corpus": round(annuity_corpus, 2),
+        "monthly_pension": round(monthly_pension, 2),
+        "years_to_retirement": retirement_age - current_age,
+    }
+
+
+def calc_credit_card_payoff(balance, apr, monthly_payment):
+    monthly_rate = apr / 100 / 12
+    min_required = balance * monthly_rate
+    if monthly_payment <= min_required:
+        return {"error": f"Monthly payment must exceed ₹{round(min_required, 2)} to pay off this balance."}
+    bal = float(balance)
+    months = 0
+    total_interest = 0.0
+    schedule = []
+    while bal > 0.005 and months < 600:
+        interest = bal * monthly_rate
+        principal_paid = min(monthly_payment - interest, bal)
+        bal = max(0, bal - principal_paid)
+        total_interest += interest
+        months += 1
+        if months <= 24 or bal <= 0:
+            schedule.append({
+                "month": months,
+                "interest": round(interest, 2),
+                "principal": round(principal_paid, 2),
+                "balance": round(bal, 2),
+            })
+    return {
+        "months_to_payoff": months,
+        "years_to_payoff": months // 12,
+        "remaining_months": months % 12,
+        "total_interest_paid": round(total_interest, 2),
+        "total_paid": round(balance + total_interest, 2),
+        "schedule": schedule,
+    }
+
+
+def calc_debt_snowball(debts, extra_payment=0):
+    if not debts:
+        return {"error": "Add at least one debt."}
+    queue = sorted([dict(d) for d in debts], key=lambda d: d["balance"])
+    for d in queue:
+        d["remaining"] = float(d["balance"])
+    snowball_pool = float(extra_payment)
+    months = 0
+    total_interest = 0.0
+    payoff_order = []
+    while any(d["remaining"] > 0.01 for d in queue) and months < 600:
+        months += 1
+        available_extra = snowball_pool
+        for d in queue:
+            if d["remaining"] <= 0.01:
+                continue
+            interest = d["remaining"] * (d["apr"] / 100 / 12)
+            total_interest += interest
+            d["remaining"] += interest
+            payment = d["min_payment"]
+            if available_extra > 0:
+                payment += available_extra
+                available_extra = 0
+            paid = min(payment, d["remaining"])
+            d["remaining"] = max(0, d["remaining"] - paid)
+            if d["remaining"] <= 0.01 and d["name"] not in payoff_order:
+                payoff_order.append(d["name"])
+                snowball_pool += d["min_payment"]
+    total_balance = sum(d["balance"] for d in debts)
+    return {
+        "months_to_debt_free": months,
+        "years_to_debt_free": months // 12,
+        "remaining_months": months % 12,
+        "total_interest_paid": round(total_interest, 2),
+        "total_starting_balance": round(total_balance, 2),
+        "total_paid": round(total_balance + total_interest, 2),
+        "payoff_order": payoff_order,
+    }
+
+
+def calc_compound_interest(principal, annual_rate, time_years,
+                            compounding_frequency=12, monthly_addition=0):
+    n = compounding_frequency
+    r = annual_rate / 100
+    lump_fv = principal * ((1 + r / n) ** (n * time_years))
+    monthly_rate = r / 12
+    months = int(time_years * 12)
+    if monthly_addition and monthly_rate > 0:
+        addition_fv = monthly_addition * (((1 + monthly_rate) ** months - 1) / monthly_rate) * (1 + monthly_rate)
+    elif monthly_addition:
+        addition_fv = monthly_addition * months
+    else:
+        addition_fv = 0
+    total_value = lump_fv + addition_fv
+    total_invested = principal + monthly_addition * months
+    yearly_breakdown = []
+    for yr in range(1, int(time_years) + 1):
+        lv = principal * ((1 + r / n) ** (n * yr))
+        av = 0
+        if monthly_addition and monthly_rate > 0:
+            av = monthly_addition * (((1 + monthly_rate) ** (yr * 12) - 1) / monthly_rate) * (1 + monthly_rate)
+        elif monthly_addition:
+            av = monthly_addition * yr * 12
+        invested_yr = principal + monthly_addition * yr * 12
+        yearly_breakdown.append({
+            "year": yr,
+            "value": round(lv + av, 2),
+            "invested": round(invested_yr, 2),
+            "interest": round(lv + av - invested_yr, 2),
+        })
+    return {
+        "principal": principal,
+        "total_invested": round(total_invested, 2),
+        "interest_earned": round(total_value - total_invested, 2),
+        "maturity_amount": round(total_value, 2),
+        "annual_rate": annual_rate,
+        "time_years": time_years,
+        "compounding_frequency": n,
+        "yearly_breakdown": yearly_breakdown,
+    }
+
+
+def calc_rd(monthly_deposit, interest_rate, tenure_months):
+    quarterly_rate = interest_rate / 100 / 4
+    balance = 0.0
+    total_invested = 0.0
+    for month in range(1, tenure_months + 1):
+        balance += monthly_deposit
+        total_invested += monthly_deposit
+        if month % 3 == 0:
+            balance += balance * quarterly_rate
+    remainder = tenure_months % 3
+    if remainder:
+        balance += balance * quarterly_rate * (remainder / 3)
+    return {
+        "maturity_amount": round(balance, 2),
+        "total_invested": round(total_invested, 2),
+        "interest_earned": round(balance - total_invested, 2),
+        "monthly_deposit": monthly_deposit,
+        "interest_rate": interest_rate,
+        "tenure_months": tenure_months,
+    }

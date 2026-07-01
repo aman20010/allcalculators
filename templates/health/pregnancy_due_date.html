@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}Pregnancy Due Date Calculator — CalcHub{% endblock %}
+{% block content %}
+<div class="breadcrumb">
+    <a href="/">Home</a><span class="sep">/</span><a href="/health">Health</a><span class="sep">/</span><span class="current">Pregnancy Due Date</span>
+</div>
+<div class="page-header">
+    <h1>Pregnancy Due Date Calculator</h1>
+    <p>Estimate your due date and current gestational age from your last menstrual period</p>
+</div>
+<div class="calc-layout">
+    <div class="calc-form">
+        <h2>Enter Details</h2>
+        <div class="field">
+            <label for="lmp_date">First Day of Last Menstrual Period (LMP)</label>
+            <input type="date" id="lmp_date">
+        </div>
+        <div class="field">
+            <label for="cycle_length">Average Cycle Length <span class="field-value"></span></label>
+            <input type="number" id="cycle_length" value="28" min="20" max="45">
+            <input type="range" id="cycle_length_r" min="20" max="45" step="1" value="28">
+            <div class="hint">In days (most common: 28)</div>
+        </div>
+        <button class="btn btn-primary" onclick="calculate()">Calculate</button>
+    </div>
+    <div class="calc-results">
+        <h2>Results</h2>
+        <div id="results-placeholder" class="results-placeholder">
+            <div class="icon">🤰</div>
+            <p>Enter your LMP date and click Calculate.</p>
+        </div>
+        <div id="results" style="display:none;">
+            <div class="result-hero">
+                <div class="label">Estimated Due Date</div>
+                <div class="value" id="r-due-date"></div>
+                <div class="sub" id="r-days-sub"></div>
+            </div>
+            <div class="result-stats">
+                <div class="stat-card"><div class="label">Current Week</div><div class="value" id="r-week"></div></div>
+                <div class="stat-card"><div class="label">Trimester</div><div class="value" id="r-trimester"></div></div>
+                <div class="stat-card"><div class="label">Conception Estimate</div><div class="value" id="r-conception"></div></div>
+            </div>
+            <div class="info-box" style="margin-top:1rem;">
+                Based on Naegele's rule: LMP + 280 days, adjusted for cycle length. Always confirm with your doctor via ultrasound. This is an estimate only.
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+syncSlider("cycle_length_r","cycle_length","","days");
+
+// Default LMP to 8 weeks ago
+const defaultLmp = new Date();
+defaultLmp.setDate(defaultLmp.getDate() - 56);
+document.getElementById("lmp_date").value = defaultLmp.toISOString().split("T")[0];
+
+async function calculate() {
+    const lmpDate = document.getElementById("lmp_date").value;
+    if (!lmpDate) return alert("Please enter your LMP date.");
+    const data = {
+        lmp_date: lmpDate,
+        cycle_length: +document.getElementById("cycle_length").value,
+    };
+    const res = await postCalc("/health/api/pregnancy-due-date", data);
+    if (res.status !== "success") return alert(res.message);
+    showResults("results");
+    const d = res.data;
+    document.getElementById("r-due-date").textContent = new Date(d.due_date).toLocaleDateString("en-IN", { day:"numeric", month:"long", year:"numeric" });
+    document.getElementById("r-days-sub").textContent = d.days_until_due > 0 ? d.days_until_due + " days to go" : "Past due date";
+    document.getElementById("r-week").textContent = d.current_week + "w " + d.current_day_in_week + "d";
+    document.getElementById("r-trimester").textContent = d.trimester === 1 ? "1st Trimester" : d.trimester === 2 ? "2nd Trimester" : "3rd Trimester";
+    document.getElementById("r-conception").textContent = new Date(d.conception_date_estimate).toLocaleDateString("en-IN", { day:"numeric", month:"short", year:"numeric" });
+}
+</script>
+{% endblock %}

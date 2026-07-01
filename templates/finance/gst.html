@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block title %}GST Calculator — CalcHub{% endblock %}
+{% block content %}
+<div class="breadcrumb">
+    <a href="/">Home</a><span class="sep">/</span><a href="/finance">Finance</a><span class="sep">/</span><span class="current">GST Calculator</span>
+</div>
+<div class="page-header">
+    <h1>GST Calculator</h1>
+    <p>Add or remove GST — inclusive and exclusive calculations</p>
+</div>
+<div class="calc-layout">
+    <div class="calc-form">
+        <h2>Enter Details</h2>
+        <div class="field">
+            <label for="amount">Amount <span class="field-value"></span></label>
+            <div class="input-wrap"><span class="prefix">₹</span><input type="number" id="amount" class="has-prefix" value="10000" min="0" step="any"></div>
+            <input type="range" id="amount_r" min="100" max="1000000" step="100" value="10000">
+        </div>
+        <div class="field">
+            <label>GST Rate</label>
+            <div class="toggle-group">
+                <input type="radio" name="gst_rate" id="r0" value="0"><label for="r0">0%</label>
+                <input type="radio" name="gst_rate" id="r5" value="5"><label for="r5">5%</label>
+                <input type="radio" name="gst_rate" id="r12" value="12"><label for="r12">12%</label>
+                <input type="radio" name="gst_rate" id="r18" value="18" checked><label for="r18">18%</label>
+                <input type="radio" name="gst_rate" id="r28" value="28"><label for="r28">28%</label>
+            </div>
+            <div class="hint" style="margin-top:.35rem;">Custom: <input type="number" id="gst_custom" style="width:80px;display:inline-block;margin-left:.25rem;" placeholder="e.g. 6" min="0" max="100" step="0.5">%</div>
+        </div>
+        <div class="field">
+            <label>Calculation Type</label>
+            <div class="toggle-group">
+                <input type="radio" name="calc_type" id="excl" value="exclusive" checked>
+                <label for="excl">Add GST (exclusive)</label>
+                <input type="radio" name="calc_type" id="incl" value="inclusive">
+                <label for="incl">Remove GST (inclusive)</label>
+            </div>
+        </div>
+        <button class="btn btn-primary" onclick="calculate()">Calculate</button>
+    </div>
+    <div class="calc-results">
+        <h2>Results</h2>
+        <div id="results-placeholder" class="results-placeholder">
+            <div class="icon">🧮</div>
+            <p>Enter amount and click Calculate.</p>
+        </div>
+        <div id="results" style="display:none;">
+            <div class="result-hero">
+                <div class="label" id="r-total-label">Total Amount (with GST)</div>
+                <div class="value" id="r-total"></div>
+            </div>
+            <div class="result-stats">
+                <div class="stat-card"><div class="label">Base Amount</div><div class="value" id="r-base"></div></div>
+                <div class="stat-card orange"><div class="label">GST Amount</div><div class="value" id="r-gst"></div></div>
+            </div>
+            <div class="result-stats" style="margin-top:.5rem;">
+                <div class="stat-card"><div class="label">CGST (half)</div><div class="value" id="r-cgst"></div></div>
+                <div class="stat-card"><div class="label">SGST (half)</div><div class="value" id="r-sgst"></div></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+syncSlider("amount_r","amount","₹","");
+
+function getGstRate() {
+    const custom = document.getElementById("gst_custom").value;
+    if (custom !== "") return parseFloat(custom);
+    const sel = document.querySelector('input[name="gst_rate"]:checked');
+    return sel ? parseFloat(sel.value) : 18;
+}
+
+async function calculate() {
+    const calcType = document.querySelector('input[name="calc_type"]:checked').value;
+    const data = {
+        amount: +document.getElementById("amount").value,
+        gst_rate: getGstRate(),
+        calculation_type: calcType,
+    };
+    const res = await postCalc("/finance/api/gst", data);
+    if (res.status !== "success") return alert(res.message);
+    showResults("results");
+    const d = res.data;
+    document.getElementById("r-total-label").textContent = calcType === "exclusive" ? "Total (with GST)" : "Base Amount (pre-GST)";
+    document.getElementById("r-total").textContent = calcType === "exclusive" ? formatINR(d.total_amount) : formatINR(d.base_amount);
+    document.getElementById("r-base").textContent = formatINR(d.base_amount);
+    document.getElementById("r-gst").textContent = formatINR(d.gst_amount);
+    document.getElementById("r-cgst").textContent = formatINR(d.cgst);
+    document.getElementById("r-sgst").textContent = formatINR(d.sgst);
+}
+</script>
+{% endblock %}

@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block title %}Heart Rate Zone Calculator — CalcHub{% endblock %}
+{% block content %}
+<div class="breadcrumb">
+    <a href="/">Home</a><span class="sep">/</span><a href="/health">Health</a><span class="sep">/</span><span class="current">Heart Rate Zones</span>
+</div>
+<div class="page-header">
+    <h1>Heart Rate Zone Calculator</h1>
+    <p>Find your 5 training zones for optimal cardio workouts</p>
+</div>
+<div class="calc-layout">
+    <div class="calc-form">
+        <h2>Enter Details</h2>
+        <div class="field">
+            <label for="age">Age <span class="field-value"></span></label>
+            <input type="number" id="age" value="30" min="10" max="90">
+            <input type="range" id="age_r" min="10" max="90" step="1" value="30">
+        </div>
+        <div class="field">
+            <label for="resting_hr">Resting Heart Rate (optional) <span class="field-value"></span></label>
+            <div class="input-wrap"><input type="number" id="resting_hr" value="" min="30" max="120" placeholder="e.g. 60"><span class="suffix">bpm</span></div>
+            <div class="hint">Leave blank to use simple % of max HR. Enter for more accurate Karvonen method.</div>
+        </div>
+        <button class="btn btn-primary" onclick="calculate()">Calculate Zones</button>
+    </div>
+    <div class="calc-results">
+        <h2>Results</h2>
+        <div id="results-placeholder" class="results-placeholder">
+            <div class="icon">❤️</div>
+            <p>Enter your age and click Calculate.</p>
+        </div>
+        <div id="results" style="display:none;">
+            <div class="result-hero">
+                <div class="label">Max Heart Rate</div>
+                <div class="value" id="r-max-hr"></div>
+                <div class="sub" id="r-method"></div>
+            </div>
+            <div id="r-zones"></div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+syncSlider("age_r","age","","yrs");
+
+const zoneColors = [
+    "var(--blue-light)", "var(--green-light)", "var(--orange-light)", "var(--red-light)", "#fce7f3"
+];
+const zoneTextColors = [
+    "var(--blue)", "var(--green)", "var(--orange)", "var(--red)", "#be185d"
+];
+const zoneDesc = [
+    "Very light — warm-up and recovery",
+    "Light — fat burning, build base fitness",
+    "Moderate — improve aerobic capacity",
+    "Hard — improve speed and performance",
+    "Maximum — short sprints only",
+];
+
+async function calculate() {
+    const restingHr = document.getElementById("resting_hr").value;
+    const data = {
+        age: +document.getElementById("age").value,
+        resting_hr: restingHr ? +restingHr : null,
+    };
+    const res = await postCalc("/health/api/heart-rate-zones", data);
+    if (res.status !== "success") return alert(res.message);
+    showResults("results");
+    const d = res.data;
+    document.getElementById("r-max-hr").textContent = d.max_heart_rate + " bpm";
+    document.getElementById("r-method").textContent = d.method;
+    document.getElementById("r-zones").innerHTML = d.zones.map((z, i) => `
+        <div style="display:flex;align-items:center;gap:.75rem;padding:.65rem .75rem;border-radius:8px;margin-bottom:.4rem;background:${zoneColors[i]};">
+            <div style="width:36px;height:36px;border-radius:50%;background:${zoneTextColors[i]};color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.8rem;flex-shrink:0;">Z${i+1}</div>
+            <div style="flex:1;">
+                <div style="font-weight:600;font-size:.85rem;color:${zoneTextColors[i]};">${z.name}</div>
+                <div style="font-size:.75rem;color:var(--text-secondary);">${zoneDesc[i]}</div>
+            </div>
+            <div style="font-weight:700;font-size:.95rem;color:${zoneTextColors[i]};white-space:nowrap;">${z.min}–${z.max} <span style="font-size:.7rem;font-weight:400;">bpm</span></div>
+        </div>
+    `).join("");
+}
+</script>
+{% endblock %}

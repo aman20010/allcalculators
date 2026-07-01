@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}Aspect Ratio Calculator — CalcHub{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="/">Home</a><span class="sep">/</span><a href="/utility">Utility</a><span class="sep">/</span><span class="current">Aspect Ratio</span></div>
+<div class="page-header"><h1>Aspect Ratio Calculator</h1><p>Calculate width, height, or ratio — scale dimensions proportionally</p></div>
+<div class="calc-form" style="max-width:640px;">
+    <h2>Known Dimensions</h2>
+    <div class="field-row">
+        <div class="field"><label for="w1">Width</label><input type="number" id="w1" value="1920" min="1" step="any"></div>
+        <div class="field"><label for="h1">Height</label><input type="number" id="h1" value="1080" min="1" step="any"></div>
+    </div>
+    <button class="btn btn-primary" style="margin-bottom:1rem;" onclick="calcRatio()">Get Ratio</button>
+    <div id="r-ratio" class="result-hero" style="display:none;"><div class="label">Aspect Ratio</div><div class="value" id="r-ratio-val"></div><div class="sub" id="r-ratio-sub"></div></div>
+
+    <div style="border-top:1px solid var(--border);margin:1.25rem 0;"></div>
+    <h2>Scale to New Size</h2>
+    <p style="font-size:.82rem;color:var(--text-secondary);">Enter either new width <em>or</em> new height — the other is calculated automatically.</p>
+    <div class="field-row">
+        <div class="field"><label for="w2">New Width</label><input type="number" id="w2" placeholder="e.g. 1280" min="1" step="any" oninput="calcFromWidth()"></div>
+        <div class="field"><label for="h2">New Height</label><input type="number" id="h2" placeholder="e.g. 720" min="1" step="any" oninput="calcFromHeight()"></div>
+    </div>
+    <div id="r-scale" class="result-hero" style="display:none;"><div class="label" id="r-scale-label"></div><div class="value" id="r-scale-val"></div></div>
+</div>
+{% endblock %}
+{% block scripts %}<script>
+function gcd(a, b) { return b === 0 ? a : gcd(b, a % b); }
+
+function calcRatio() {
+    const w = +document.getElementById("w1").value, h = +document.getElementById("h1").value;
+    if (!w || !h) return alert("Enter width and height.");
+    const g = gcd(Math.round(w), Math.round(h));
+    const rw = w / g, rh = h / g;
+    const decimal = (w / h).toFixed(4);
+    document.getElementById("r-ratio").style.display = "block";
+    document.getElementById("r-ratio-val").textContent = rw + ":" + rh;
+    document.getElementById("r-ratio-sub").textContent = decimal + ":1 — original size " + w + "×" + h;
+}
+
+function calcFromWidth() {
+    const w1 = +document.getElementById("w1").value, h1 = +document.getElementById("h1").value;
+    const w2 = +document.getElementById("w2").value;
+    if (!w1 || !h1 || !w2) return;
+    const h2 = Math.round(w2 * h1 / w1);
+    document.getElementById("h2").value = h2;
+    showScaleResult("New height for width " + w2, w2 + " × " + h2);
+}
+
+function calcFromHeight() {
+    const w1 = +document.getElementById("w1").value, h1 = +document.getElementById("h1").value;
+    const h2 = +document.getElementById("h2").value;
+    if (!w1 || !h1 || !h2) return;
+    const w2 = Math.round(h2 * w1 / h1);
+    document.getElementById("w2").value = w2;
+    showScaleResult("New width for height " + h2, w2 + " × " + h2);
+}
+
+function showScaleResult(label, val) {
+    document.getElementById("r-scale").style.display = "block";
+    document.getElementById("r-scale-label").textContent = label;
+    document.getElementById("r-scale-val").textContent = val;
+}
+</script>{% endblock %}

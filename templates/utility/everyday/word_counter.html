@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Word & Character Counter — CalcHub{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="/">Home</a><span class="sep">/</span><a href="/utility">Utility</a><span class="sep">/</span><span class="current">Word Counter</span></div>
+<div class="page-header"><h1>Word & Character Counter</h1><p>Count words, characters, sentences, and paragraphs instantly</p></div>
+<div class="calc-form" style="max-width:760px;">
+    <div class="field">
+        <label for="text">Paste or type your text</label>
+        <textarea id="text" rows="10" style="width:100%;resize:vertical;font-size:.9rem;padding:.6rem;" placeholder="Start typing or paste text here…" oninput="count()"></textarea>
+    </div>
+    <div class="result-stats" style="margin-top:0;">
+        <div class="stat-card"><div class="label">Words</div><div class="value" id="r-words">0</div></div>
+        <div class="stat-card"><div class="label">Characters</div><div class="value" id="r-chars">0</div></div>
+        <div class="stat-card"><div class="label">No Spaces</div><div class="value" id="r-no-spaces">0</div></div>
+        <div class="stat-card"><div class="label">Sentences</div><div class="value" id="r-sentences">0</div></div>
+        <div class="stat-card"><div class="label">Paragraphs</div><div class="value" id="r-paragraphs">0</div></div>
+        <div class="stat-card"><div class="label">Read Time</div><div class="value" id="r-read-time">0 sec</div></div>
+    </div>
+    <div style="margin-top:1rem;">
+        <button class="btn" onclick="document.getElementById('text').value='';count()">Clear</button>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}<script>
+function count() {
+    const text = document.getElementById("text").value;
+    const words = text.trim() === "" ? 0 : text.trim().split(/\s+/).length;
+    const chars = text.length;
+    const noSpaces = text.replace(/\s/g,"").length;
+    const sentences = text.trim() === "" ? 0 : (text.match(/[.!?]+/g) || []).length;
+    const paragraphs = text.trim() === "" ? 0 : text.trim().split(/\n\s*\n/).filter(p => p.trim()).length || (text.trim() ? 1 : 0);
+    const readSec = Math.ceil(words / (200 / 60));
+    const readDisplay = readSec < 60 ? readSec + " sec" : Math.ceil(readSec / 60) + " min";
+    document.getElementById("r-words").textContent = words.toLocaleString();
+    document.getElementById("r-chars").textContent = chars.toLocaleString();
+    document.getElementById("r-no-spaces").textContent = noSpaces.toLocaleString();
+    document.getElementById("r-sentences").textContent = sentences.toLocaleString();
+    document.getElementById("r-paragraphs").textContent = paragraphs.toLocaleString();
+    document.getElementById("r-read-time").textContent = readDisplay;
+}
+</script>{% endblock %}

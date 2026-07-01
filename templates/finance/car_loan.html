@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block title %}Car Loan EMI Calculator - CalcHub{% endblock %}
+{% block content %}
+<div class="breadcrumb">
+    <a href="/">Home</a><span class="sep">/</span><a href="/finance">Finance</a><span class="sep">/</span><span class="current">Car Loan Calculator</span>
+</div>
+<div class="page-header">
+    <h1>Car Loan EMI Calculator</h1>
+    <p>Calculate your car loan EMI, total interest, and repayment schedule</p>
+</div>
+<div class="calc-layout">
+    <div class="calc-form">
+        <h2>Car Loan Details</h2>
+        <div class="field">
+            <label for="principal">Car Loan Amount <span class="field-value"></span></label>
+            <div class="input-wrap"><span class="prefix">&#8377;</span><input type="number" id="principal" class="has-prefix" value="800000" min="50000"></div>
+            <input type="range" id="principal_r" min="100000" max="5000000" step="50000" value="800000">
+        </div>
+        <div class="field">
+            <label for="interest_rate">Interest Rate <span class="field-value"></span></label>
+            <div class="input-wrap"><input type="number" id="interest_rate" value="9" min="4" max="20" step="0.1"><span class="suffix">% p.a.</span></div>
+            <input type="range" id="interest_rate_r" min="6" max="16" step="0.1" value="9">
+        </div>
+        <div class="field">
+            <label for="tenure">Loan Tenure <span class="field-value"></span></label>
+            <input type="number" id="tenure" value="5" min="1" max="8">
+            <input type="range" id="tenure_r" min="1" max="8" step="1" value="5">
+            <div class="hint">In years</div>
+        </div>
+        <button class="btn btn-primary" onclick="calculate()">Calculate EMI</button>
+    </div>
+    <div class="calc-results">
+        <h2>Results</h2>
+        <div id="results-placeholder" class="results-placeholder">
+            <div class="icon">&#128663;</div>
+            <p>Enter your car loan details and click Calculate.</p>
+        </div>
+        <div id="results" style="display:none;">
+            <div class="result-hero">
+                <div class="label">Monthly EMI</div>
+                <div class="value" id="r-emi"></div>
+            </div>
+            <div class="result-stats">
+                <div class="stat-card"><div class="label">Loan Amount</div><div class="value" id="r-principal"></div></div>
+                <div class="stat-card red"><div class="label">Total Interest</div><div class="value" id="r-interest"></div></div>
+                <div class="stat-card orange"><div class="label">Total Payment</div><div class="value" id="r-total"></div></div>
+            </div>
+            <div class="chart-container"><canvas id="chart"></canvas></div>
+            <details class="breakdown">
+                <summary>Year-by-year breakdown</summary>
+                <table>
+                    <thead><tr><th>Year</th><th>Principal</th><th>Interest</th><th>Balance</th></tr></thead>
+                    <tbody id="r-table"></tbody>
+                </table>
+            </details>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<script>
+let chart;
+syncSlider("principal_r","principal","₹","");
+syncSlider("interest_rate_r","interest_rate","","% p.a.");
+syncSlider("tenure_r","tenure","","yrs");
+
+async function calculate() {
+    const data = {
+        principal: +document.getElementById("principal").value,
+        interest_rate: +document.getElementById("interest_rate").value,
+        tenure_months: +document.getElementById("tenure").value * 12,
+    };
+    const res = await postCalc("/finance/api/car-loan", data);
+    if (res.status !== "success") return alert(res.message);
+    showResults("results");
+    const d = res.data;
+    document.getElementById("r-emi").textContent = formatINR(d.emi);
+    document.getElementById("r-principal").textContent = formatINR(d.principal);
+    document.getElementById("r-interest").textContent = formatINR(d.total_interest);
+    document.getElementById("r-total").textContent = formatINR(d.total_payment);
+    document.getElementById("r-table").innerHTML = d.yearly_breakdown.map(r =>
+        `<tr><td>${r.year}</td><td>${formatINR(r.principal_paid)}</td><td>${formatINR(r.interest_paid)}</td><td>${formatINR(r.balance)}</td></tr>`
+    ).join("");
+    if (chart) chart.destroy();
+    chart = new Chart(document.getElementById("chart"), {
+        type: "doughnut",
+        data: { labels:["Principal","Interest"], datasets:[{ data:[d.principal, d.total_interest], backgroundColor:["#4f46e5","#dc2626"], borderWidth:0, borderRadius:4 }] },
+        options: { responsive:true, cutout:"65%", plugins:{ legend:{ position:"bottom", labels:{ padding:10, usePointStyle:true, pointStyle:"circle", font:{size:11,family:"Inter"} } } } }
+    });
+}
+</script>
+{% endblock %}

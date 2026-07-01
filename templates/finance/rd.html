@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}RD Calculator — Recurring Deposit — CalcHub{% endblock %}
+{% block content %}
+<div class="breadcrumb">
+    <a href="/">Home</a><span class="sep">/</span><a href="/finance">Finance</a><span class="sep">/</span><span class="current">RD Calculator</span>
+</div>
+<div class="page-header">
+    <h1>RD Calculator</h1>
+    <p>Recurring Deposit maturity with quarterly compounding</p>
+</div>
+<div class="calc-layout">
+    <div class="calc-form">
+        <h2>Enter Details</h2>
+        <div class="field">
+            <label for="monthly_deposit">Monthly Deposit <span class="field-value"></span></label>
+            <div class="input-wrap"><span class="prefix">₹</span><input type="number" id="monthly_deposit" class="has-prefix" value="5000" min="100"></div>
+            <input type="range" id="monthly_deposit_r" min="500" max="100000" step="500" value="5000">
+        </div>
+        <div class="field">
+            <label for="interest_rate">Interest Rate <span class="field-value"></span></label>
+            <div class="input-wrap"><input type="number" id="interest_rate" value="7" min="1" max="20" step="0.25"><span class="suffix">% p.a.</span></div>
+            <input type="range" id="interest_rate_r" min="4" max="12" step="0.25" value="7">
+        </div>
+        <div class="field">
+            <label for="tenure_months">Tenure <span class="field-value"></span></label>
+            <input type="number" id="tenure_months" value="24" min="3" max="120">
+            <input type="range" id="tenure_months_r" min="3" max="120" step="3" value="24">
+            <div class="hint">In months</div>
+        </div>
+        <button class="btn btn-primary" onclick="calculate()">Calculate</button>
+    </div>
+    <div class="calc-results">
+        <h2>Results</h2>
+        <div id="results-placeholder" class="results-placeholder">
+            <div class="icon">🏧</div>
+            <p>Enter your RD details and click Calculate.</p>
+        </div>
+        <div id="results" style="display:none;">
+            <div class="result-hero">
+                <div class="label">Maturity Amount</div>
+                <div class="value" id="r-maturity"></div>
+            </div>
+            <div class="result-stats">
+                <div class="stat-card"><div class="label">Total Deposited</div><div class="value" id="r-invested"></div></div>
+                <div class="stat-card green"><div class="label">Interest Earned</div><div class="value" id="r-interest"></div></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+syncSlider("monthly_deposit_r","monthly_deposit","₹","");
+syncSlider("interest_rate_r","interest_rate","","% p.a.");
+syncSlider("tenure_months_r","tenure_months","","months");
+
+async function calculate() {
+    const data = {
+        monthly_deposit: +document.getElementById("monthly_deposit").value,
+        interest_rate: +document.getElementById("interest_rate").value,
+        tenure_months: +document.getElementById("tenure_months").value,
+    };
+    const res = await postCalc("/finance/api/rd", data);
+    if (res.status !== "success") return alert(res.message);
+    showResults("results");
+    const d = res.data;
+    document.getElementById("r-maturity").textContent = formatINR(d.maturity_amount);
+    document.getElementById("r-invested").textContent = formatINR(d.total_invested);
+    document.getElementById("r-interest").textContent = formatINR(d.interest_earned);
+}
+</script>
+{% endblock %}

@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}Ovulation Calculator — Fertile Window — CalcHub{% endblock %}
+{% block content %}
+<div class="breadcrumb">
+    <a href="/">Home</a><span class="sep">/</span><a href="/health">Health</a><span class="sep">/</span><span class="current">Ovulation Calculator</span>
+</div>
+<div class="page-header">
+    <h1>Ovulation Calculator</h1>
+    <p>Find your fertile window and most likely ovulation date</p>
+</div>
+<div class="calc-layout">
+    <div class="calc-form">
+        <h2>Enter Details</h2>
+        <div class="field">
+            <label for="lmp_date">First Day of Last Menstrual Period</label>
+            <input type="date" id="lmp_date">
+        </div>
+        <div class="field">
+            <label for="cycle_length">Cycle Length <span class="field-value"></span></label>
+            <input type="number" id="cycle_length" value="28" min="20" max="45">
+            <input type="range" id="cycle_length_r" min="20" max="45" step="1" value="28">
+            <div class="hint">In days</div>
+        </div>
+        <button class="btn btn-primary" onclick="calculate()">Calculate</button>
+    </div>
+    <div class="calc-results">
+        <h2>Results</h2>
+        <div id="results-placeholder" class="results-placeholder">
+            <div class="icon">🌸</div>
+            <p>Enter your period start date and click Calculate.</p>
+        </div>
+        <div id="results" style="display:none;">
+            <div class="result-hero">
+                <div class="label">Ovulation Date</div>
+                <div class="value" id="r-ovulation"></div>
+            </div>
+            <div class="result-stats">
+                <div class="stat-card green"><div class="label">Fertile Window Starts</div><div class="value" id="r-fertile-start"></div></div>
+                <div class="stat-card green"><div class="label">Fertile Window Ends</div><div class="value" id="r-fertile-end"></div></div>
+                <div class="stat-card"><div class="label">Next Period Due</div><div class="value" id="r-next-period"></div></div>
+            </div>
+            <div class="info-box" style="margin-top:1rem;">
+                Ovulation typically occurs 14 days before the next period. The fertile window is 5 days before ovulation to 1 day after. These are estimates — actual timing varies. Not a contraceptive method.
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+syncSlider("cycle_length_r","cycle_length","","days");
+
+const defaultLmp = new Date();
+defaultLmp.setDate(defaultLmp.getDate() - 7);
+document.getElementById("lmp_date").value = defaultLmp.toISOString().split("T")[0];
+
+function fmtDate(str) {
+    return new Date(str).toLocaleDateString("en-IN", { day:"numeric", month:"short", year:"numeric" });
+}
+
+async function calculate() {
+    const lmpDate = document.getElementById("lmp_date").value;
+    if (!lmpDate) return alert("Please enter your period start date.");
+    const data = { lmp_date: lmpDate, cycle_length: +document.getElementById("cycle_length").value };
+    const res = await postCalc("/health/api/ovulation", data);
+    if (res.status !== "success") return alert(res.message);
+    showResults("results");
+    const d = res.data;
+    document.getElementById("r-ovulation").textContent = fmtDate(d.ovulation_date);
+    document.getElementById("r-fertile-start").textContent = fmtDate(d.fertile_window_start);
+    document.getElementById("r-fertile-end").textContent = fmtDate(d.fertile_window_end);
+    document.getElementById("r-next-period").textContent = fmtDate(d.next_period_date);
+}
+</script>
+{% endblock %}
