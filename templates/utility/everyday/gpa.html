@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}GPA Calculator — CalcHub{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="/">Home</a><span class="sep">/</span><a href="/utility">Utility</a><span class="sep">/</span><span class="current">GPA Calculator</span></div>
+<div class="page-header"><h1>GPA Calculator</h1><p>Calculate your GPA from subject grades and credit hours</p></div>
+<div class="calc-form" style="max-width:700px;">
+    <h2>Subjects</h2>
+    <div id="subjects-list"></div>
+    <button class="btn" style="margin-bottom:1rem;" onclick="addSubject()">+ Add Subject</button>
+    <div style="display:flex;gap:.75rem;align-items:center;flex-wrap:wrap;margin-bottom:1rem;">
+        <div class="field" style="margin:0;flex:1;">
+            <label>Grading Scale</label>
+            <select id="scale" onchange="renderSubjects()">
+                <option value="10">10-point scale (India)</option>
+                <option value="4">4-point scale (US)</option>
+            </select>
+        </div>
+        <button class="btn btn-primary" onclick="calculate()">Calculate GPA</button>
+    </div>
+    <div id="results-placeholder" class="results-placeholder">
+        <div class="icon">🎓</div>
+        <p>Add subjects and click Calculate GPA.</p>
+    </div>
+    <div id="results" style="display:none;margin-top:1rem;">
+        <div class="result-hero">
+            <div class="label">GPA</div>
+            <div class="value" id="r-gpa"></div>
+            <div class="sub" id="r-grade"></div>
+        </div>
+        <div class="result-stats">
+            <div class="stat-card"><div class="label">Total Credits</div><div class="value" id="r-credits"></div></div>
+            <div class="stat-card"><div class="label">Grade Points Earned</div><div class="value" id="r-points"></div></div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}<script>
+let subjects = [
+    { name: "Maths", grade: 9, credits: 4 },
+    { name: "Physics", grade: 8, credits: 4 },
+    { name: "English", grade: 7, credits: 3 },
+];
+
+function getScale() { return +document.getElementById("scale").value; }
+
+function renderSubjects() {
+    const scale = getScale();
+    document.getElementById("subjects-list").innerHTML = subjects.map((s, i) => `
+        <div class="field-row" style="align-items:flex-end;gap:.5rem;margin-bottom:.5rem;">
+            <div class="field" style="flex:3;margin:0;"><label>Subject</label><input type="text" value="${s.name}" oninput="subjects[${i}].name=this.value"></div>
+            <div class="field" style="flex:2;margin:0;"><label>Grade (0–${scale})</label><input type="number" value="${s.grade}" min="0" max="${scale}" step="0.1" oninput="subjects[${i}].grade=+this.value"></div>
+            <div class="field" style="flex:1.5;margin:0;"><label>Credits</label><input type="number" value="${s.credits}" min="1" max="10" oninput="subjects[${i}].credits=+this.value"></div>
+            <button onclick="removeSubject(${i})" style="padding:.45rem .7rem;background:var(--red-light);color:var(--red);border:none;border-radius:6px;cursor:pointer;">✕</button>
+        </div>`
+    ).join("");
+}
+
+function addSubject() {
+    subjects.push({ name: "Subject " + (subjects.length + 1), grade: 8, credits: 3 });
+    renderSubjects();
+}
+function removeSubject(i) { subjects.splice(i, 1); renderSubjects(); }
+
+function calculate() {
+    const scale = getScale();
+    let totalCredits = 0, totalPoints = 0;
+    for (const s of subjects) {
+        totalPoints += s.grade * s.credits;
+        totalCredits += s.credits;
+    }
+    if (!totalCredits) return alert("Add at least one subject.");
+    const gpa = totalPoints / totalCredits;
+    showResults("results");
+    document.getElementById("r-gpa").textContent = gpa.toFixed(2) + " / " + scale;
+    const pct = (gpa / scale) * 100;
+    document.getElementById("r-grade").textContent = pct >= 90 ? "Outstanding" : pct >= 75 ? "Distinction" : pct >= 60 ? "First Class" : pct >= 50 ? "Second Class" : "Pass";
+    document.getElementById("r-credits").textContent = totalCredits;
+    document.getElementById("r-points").textContent = totalPoints.toFixed(1);
+}
+
+renderSubjects();
+</script>{% endblock %}

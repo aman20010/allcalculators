@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block title %}HRA Exemption Calculator — CalcHub{% endblock %}
+{% block content %}
+<div class="breadcrumb">
+    <a href="/">Home</a><span class="sep">/</span><a href="/finance">Finance</a><span class="sep">/</span><span class="current">HRA Exemption</span>
+</div>
+<div class="page-header">
+    <h1>HRA Exemption Calculator</h1>
+    <p>Find out how much of your House Rent Allowance is tax-exempt</p>
+</div>
+<div class="calc-layout">
+    <div class="calc-form">
+        <h2>Monthly Salary & Rent Details</h2>
+        <div class="field">
+            <label for="basic_salary">Basic Salary (monthly) <span class="field-value"></span></label>
+            <div class="input-wrap"><span class="prefix">₹</span><input type="number" id="basic_salary" class="has-prefix" value="50000" min="1"></div>
+            <input type="range" id="basic_salary_r" min="10000" max="300000" step="1000" value="50000">
+        </div>
+        <div class="field">
+            <label for="da">DA (monthly, if any) <span class="field-value"></span></label>
+            <div class="input-wrap"><span class="prefix">₹</span><input type="number" id="da" class="has-prefix" value="0" min="0"></div>
+        </div>
+        <div class="field">
+            <label for="hra_received">HRA Received (monthly) <span class="field-value"></span></label>
+            <div class="input-wrap"><span class="prefix">₹</span><input type="number" id="hra_received" class="has-prefix" value="20000" min="0"></div>
+            <input type="range" id="hra_received_r" min="0" max="200000" step="500" value="20000">
+        </div>
+        <div class="field">
+            <label for="rent_paid">Rent Paid (monthly) <span class="field-value"></span></label>
+            <div class="input-wrap"><span class="prefix">₹</span><input type="number" id="rent_paid" class="has-prefix" value="25000" min="0"></div>
+            <input type="range" id="rent_paid_r" min="0" max="200000" step="500" value="25000">
+        </div>
+        <div class="field">
+            <label>City Type</label>
+            <div class="toggle-group">
+                <input type="radio" name="metro" id="metro_yes" value="yes" checked>
+                <label for="metro_yes">Metro (50% of basic)</label>
+                <input type="radio" name="metro" id="metro_no" value="no">
+                <label for="metro_no">Non-Metro (40% of basic)</label>
+            </div>
+        </div>
+        <button class="btn btn-primary" onclick="calculate()">Calculate</button>
+    </div>
+    <div class="calc-results">
+        <h2>Results</h2>
+        <div id="results-placeholder" class="results-placeholder">
+            <div class="icon">🏠</div>
+            <p>Enter your details and click Calculate.</p>
+        </div>
+        <div id="results" style="display:none;">
+            <div class="result-hero">
+                <div class="label">Annual HRA Exemption</div>
+                <div class="value" id="r-annual-exempt"></div>
+                <div class="sub">tax-free HRA per year</div>
+            </div>
+            <div class="result-stats">
+                <div class="stat-card green"><div class="label">Monthly Exempt HRA</div><div class="value" id="r-monthly-exempt"></div></div>
+                <div class="stat-card red"><div class="label">Monthly Taxable HRA</div><div class="value" id="r-monthly-taxable"></div></div>
+                <div class="stat-card orange"><div class="label">Annual Taxable HRA</div><div class="value" id="r-annual-taxable"></div></div>
+            </div>
+            <div class="section-label" style="margin-top:.75rem;">Exemption Limits (least of three)</div>
+            <div class="result-stats">
+                <div class="stat-card"><div class="label">Actual HRA Received</div><div class="value" id="r-actual-hra"></div></div>
+                <div class="stat-card"><div class="label">Rent − 10% Salary</div><div class="value" id="r-rent-10"></div></div>
+                <div class="stat-card"><div class="label">Metro/Non-Metro Limit</div><div class="value" id="r-metro-limit"></div></div>
+            </div>
+            <div class="info-box" style="margin-top:1rem;">
+                HRA exemption is the <strong>least</strong> of: actual HRA received, rent paid minus 10% of basic+DA, and 50%/40% of basic+DA (metro/non-metro). Only applicable under the old tax regime.
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+syncSlider("basic_salary_r","basic_salary","₹","");
+syncSlider("hra_received_r","hra_received","₹","");
+syncSlider("rent_paid_r","rent_paid","₹","");
+
+async function calculate() {
+    const data = {
+        basic_salary: +document.getElementById("basic_salary").value,
+        da: +document.getElementById("da").value,
+        hra_received: +document.getElementById("hra_received").value,
+        rent_paid: +document.getElementById("rent_paid").value,
+        is_metro: document.getElementById("metro_yes").checked,
+    };
+    const res = await postCalc("/finance/api/hra", data);
+    if (res.status !== "success") return alert(res.message);
+    showResults("results");
+    const d = res.data;
+    document.getElementById("r-annual-exempt").textContent = formatINR(d.annual_exempt_hra);
+    document.getElementById("r-monthly-exempt").textContent = formatINR(d.monthly_exempt_hra);
+    document.getElementById("r-monthly-taxable").textContent = formatINR(d.monthly_taxable_hra);
+    document.getElementById("r-annual-taxable").textContent = formatINR(d.annual_taxable_hra);
+    document.getElementById("r-actual-hra").textContent = formatINR(d.actual_hra_received);
+    document.getElementById("r-rent-10").textContent = formatINR(d.rent_minus_10pct_salary);
+    document.getElementById("r-metro-limit").textContent = formatINR(d.metro_limit);
+}
+</script>
+{% endblock %}

@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block title %}Debt Snowball Calculator — CalcHub{% endblock %}
+{% block content %}
+<div class="breadcrumb">
+    <a href="/">Home</a><span class="sep">/</span><a href="/finance">Finance</a><span class="sep">/</span><span class="current">Debt Snowball</span>
+</div>
+<div class="page-header">
+    <h1>Debt Snowball Calculator</h1>
+    <p>Pay off multiple debts fastest with the snowball method — smallest balance first</p>
+</div>
+<div class="calc-form" style="max-width:700px;">
+    <h2>Your Debts</h2>
+    <div id="debts-list"></div>
+    <button class="btn" style="margin-bottom:1rem;" onclick="addDebt()">+ Add Debt</button>
+    <div class="field">
+        <label for="extra_payment">Extra Monthly Payment <span class="field-value"></span></label>
+        <div class="input-wrap"><span class="prefix">₹</span><input type="number" id="extra_payment" class="has-prefix" value="0" min="0"></div>
+        <div class="hint">Amount you can pay above all minimums each month</div>
+    </div>
+    <button class="btn btn-primary" onclick="calculate()">Calculate Payoff</button>
+
+    <div id="results-placeholder" class="results-placeholder" style="margin-top:1.5rem;">
+        <div class="icon">❄️</div>
+        <p>Add your debts and click Calculate.</p>
+    </div>
+    <div id="results" style="display:none;margin-top:1.5rem;">
+        <div class="result-hero">
+            <div class="label">Debt-Free In</div>
+            <div class="value" id="r-time"></div>
+        </div>
+        <div class="result-stats">
+            <div class="stat-card"><div class="label">Total Balance</div><div class="value" id="r-balance"></div></div>
+            <div class="stat-card red"><div class="label">Total Interest</div><div class="value" id="r-interest"></div></div>
+            <div class="stat-card orange"><div class="label">Total Paid</div><div class="value" id="r-total"></div></div>
+        </div>
+        <div class="section-label" style="margin-top:.75rem;">Payoff Order (snowball)</div>
+        <div id="r-order" style="display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.5rem;"></div>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+let debts = [
+    { name: "Credit Card", balance: 50000, apr: 36, min_payment: 2000 },
+    { name: "Personal Loan", balance: 150000, apr: 14, min_payment: 5000 },
+];
+
+function renderDebts() {
+    const list = document.getElementById("debts-list");
+    list.innerHTML = debts.map((d, i) => `
+        <div class="field-row" style="align-items:flex-end;gap:.5rem;margin-bottom:.5rem;">
+            <div class="field" style="flex:2;margin:0;"><label>Name</label><input type="text" value="${d.name}" oninput="debts[${i}].name=this.value"></div>
+            <div class="field" style="flex:2;margin:0;"><label>Balance (₹)</label><input type="number" value="${d.balance}" min="1" oninput="debts[${i}].balance=+this.value"></div>
+            <div class="field" style="flex:1.5;margin:0;"><label>APR (%)</label><input type="number" value="${d.apr}" min="0" step="0.5" oninput="debts[${i}].apr=+this.value"></div>
+            <div class="field" style="flex:2;margin:0;"><label>Min Payment (₹)</label><input type="number" value="${d.min_payment}" min="1" oninput="debts[${i}].min_payment=+this.value"></div>
+            <button onclick="removeDebt(${i})" style="padding:.45rem .7rem;background:var(--red-light);color:var(--red);border:none;border-radius:6px;cursor:pointer;white-space:nowrap;margin-bottom:.15rem;">✕</button>
+        </div>`
+    ).join("");
+}
+
+function addDebt() {
+    debts.push({ name: "Debt " + (debts.length + 1), balance: 10000, apr: 18, min_payment: 1000 });
+    renderDebts();
+}
+
+function removeDebt(i) {
+    debts.splice(i, 1);
+    renderDebts();
+}
+
+async function calculate() {
+    const data = { debts: debts.map(d => ({...d})), extra_payment: +document.getElementById("extra_payment").value };
+    const res = await postCalc("/finance/api/debt-snowball", data);
+    if (res.status !== "success") return alert(res.message);
+    showResults("results");
+    const d = res.data;
+    const yrs = d.years_to_debt_free, mos = d.remaining_months;
+    document.getElementById("r-time").textContent = (yrs > 0 ? yrs + "y " : "") + mos + "m";
+    document.getElementById("r-balance").textContent = formatINR(d.total_starting_balance);
+    document.getElementById("r-interest").textContent = formatINR(d.total_interest_paid);
+    document.getElementById("r-total").textContent = formatINR(d.total_paid);
+    document.getElementById("r-order").innerHTML = (d.payoff_order || []).map((name, i) =>
+        `<span style="background:var(--green-light);color:var(--green);padding:.25rem .6rem;border-radius:999px;font-size:.8rem;">${i+1}. ${name}</span>`
+    ).join("");
+}
+
+renderDebts();
+</script>
+{% endblock %}

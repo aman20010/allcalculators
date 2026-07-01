@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block title %}Take-Home Salary Calculator — CTC to In-Hand — CalcHub{% endblock %}
+{% block content %}
+<div class="breadcrumb">
+    <a href="/">Home</a><span class="sep">/</span><a href="/finance">Finance</a><span class="sep">/</span><span class="current">Take-Home Salary</span>
+</div>
+<div class="page-header">
+    <h1>Take-Home Salary Calculator</h1>
+    <p>Convert CTC to monthly in-hand salary — India</p>
+</div>
+<div class="calc-layout">
+    <div class="calc-form">
+        <h2>CTC Details</h2>
+        <div class="field">
+            <label for="ctc">Annual CTC <span class="field-value"></span></label>
+            <div class="input-wrap"><span class="prefix">₹</span><input type="number" id="ctc" class="has-prefix" value="1200000" min="100000"></div>
+            <input type="range" id="ctc_r" min="300000" max="10000000" step="50000" value="1200000">
+        </div>
+        <div class="field">
+            <label for="bonus">Annual Bonus (variable) <span class="field-value"></span></label>
+            <div class="input-wrap"><span class="prefix">₹</span><input type="number" id="bonus" class="has-prefix" value="0" min="0"></div>
+        </div>
+        <div class="field">
+            <label for="basic_percent">Basic Salary % of CTC <span class="field-value"></span></label>
+            <input type="number" id="basic_percent" value="50" min="30" max="80">
+            <input type="range" id="basic_percent_r" min="30" max="80" step="5" value="50">
+            <div class="hint">Typically 40–60% of CTC</div>
+        </div>
+        <div class="field">
+            <label for="other_deductions">Other Deductions (80D, NPS…) <span class="field-value"></span></label>
+            <div class="input-wrap"><span class="prefix">₹</span><input type="number" id="other_deductions" class="has-prefix" value="0" min="0"></div>
+        </div>
+        <div class="field">
+            <label>Tax Regime</label>
+            <div class="toggle-group">
+                <input type="radio" name="regime" id="regime_new" value="new" checked>
+                <label for="regime_new">New Regime</label>
+                <input type="radio" name="regime" id="regime_old" value="old">
+                <label for="regime_old">Old Regime</label>
+            </div>
+        </div>
+        <button class="btn btn-primary" onclick="calculate()">Calculate</button>
+    </div>
+    <div class="calc-results">
+        <h2>Results</h2>
+        <div id="results-placeholder" class="results-placeholder">
+            <div class="icon">💰</div>
+            <p>Enter your CTC and click Calculate.</p>
+        </div>
+        <div id="results" style="display:none;">
+            <div class="result-hero">
+                <div class="label">Monthly In-Hand Salary</div>
+                <div class="value" id="r-monthly"></div>
+                <div class="sub" id="r-annual-sub"></div>
+            </div>
+            <div class="result-stats">
+                <div class="stat-card"><div class="label">Gross Salary (Annual)</div><div class="value" id="r-gross"></div></div>
+                <div class="stat-card"><div class="label">Monthly Gross</div><div class="value" id="r-monthly-gross"></div></div>
+            </div>
+            <div class="section-label" style="margin-top:.75rem;">Deductions Breakdown</div>
+            <div class="result-stats">
+                <div class="stat-card red"><div class="label">Income Tax</div><div class="value" id="r-tax"></div></div>
+                <div class="stat-card orange"><div class="label">Employee PF</div><div class="value" id="r-epf"></div></div>
+                <div class="stat-card"><div class="label">Professional Tax</div><div class="value" id="r-pt"></div></div>
+            </div>
+            <div class="section-label" style="margin-top:.75rem;">Employer Contributions (not paid to you)</div>
+            <div class="result-stats">
+                <div class="stat-card"><div class="label">Employer PF</div><div class="value" id="r-employer-pf"></div></div>
+                <div class="stat-card"><div class="label">Gratuity (accrual)</div><div class="value" id="r-gratuity"></div></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+syncSlider("ctc_r","ctc","₹","");
+syncSlider("basic_percent_r","basic_percent","","% of CTC");
+
+async function calculate() {
+    const data = {
+        ctc: +document.getElementById("ctc").value,
+        bonus: +document.getElementById("bonus").value,
+        basic_percent: +document.getElementById("basic_percent").value,
+        other_deductions: +document.getElementById("other_deductions").value,
+        regime: document.getElementById("regime_new").checked ? "new" : "old",
+    };
+    const res = await postCalc("/finance/api/take-home-salary", data);
+    if (res.status !== "success") return alert(res.message);
+    showResults("results");
+    const d = res.data;
+    document.getElementById("r-monthly").textContent = formatINR(d.monthly_take_home);
+    document.getElementById("r-annual-sub").textContent = formatINR(d.annual_take_home) + " per year";
+    document.getElementById("r-gross").textContent = formatINR(d.gross_salary);
+    document.getElementById("r-monthly-gross").textContent = formatINR(d.monthly_gross);
+    document.getElementById("r-tax").textContent = formatINR(d.income_tax);
+    document.getElementById("r-epf").textContent = formatINR(d.employee_pf);
+    document.getElementById("r-pt").textContent = formatINR(d.professional_tax);
+    document.getElementById("r-employer-pf").textContent = formatINR(d.employer_pf);
+    document.getElementById("r-gratuity").textContent = formatINR(d.gratuity_contribution);
+}
+</script>
+{% endblock %}

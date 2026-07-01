@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block title %}Credit Card Payoff Calculator — CalcHub{% endblock %}
+{% block content %}
+<div class="breadcrumb">
+    <a href="/">Home</a><span class="sep">/</span><a href="/finance">Finance</a><span class="sep">/</span><span class="current">Credit Card Payoff</span>
+</div>
+<div class="page-header">
+    <h1>Credit Card Payoff Calculator</h1>
+    <p>Find out how long it takes to clear your credit card debt</p>
+</div>
+<div class="calc-layout">
+    <div class="calc-form">
+        <h2>Enter Details</h2>
+        <div class="field">
+            <label for="balance">Current Balance <span class="field-value"></span></label>
+            <div class="input-wrap"><span class="prefix">₹</span><input type="number" id="balance" class="has-prefix" value="50000" min="1"></div>
+            <input type="range" id="balance_r" min="1000" max="500000" step="1000" value="50000">
+        </div>
+        <div class="field">
+            <label for="apr">Annual Interest Rate (APR) <span class="field-value"></span></label>
+            <div class="input-wrap"><input type="number" id="apr" value="36" min="1" max="60" step="0.5"><span class="suffix">% p.a.</span></div>
+            <input type="range" id="apr_r" min="12" max="48" step="0.5" value="36">
+            <div class="hint">Most Indian credit cards charge 36–42% p.a.</div>
+        </div>
+        <div class="field">
+            <label for="monthly_payment">Monthly Payment <span class="field-value"></span></label>
+            <div class="input-wrap"><span class="prefix">₹</span><input type="number" id="monthly_payment" class="has-prefix" value="3000" min="1"></div>
+            <input type="range" id="monthly_payment_r" min="500" max="100000" step="500" value="3000">
+        </div>
+        <button class="btn btn-primary" onclick="calculate()">Calculate</button>
+    </div>
+    <div class="calc-results">
+        <h2>Results</h2>
+        <div id="results-placeholder" class="results-placeholder">
+            <div class="icon">💳</div>
+            <p>Enter your card details and click Calculate.</p>
+        </div>
+        <div id="results" style="display:none;">
+            <div class="result-hero">
+                <div class="label">Time to Pay Off</div>
+                <div class="value" id="r-time"></div>
+            </div>
+            <div class="result-stats">
+                <div class="stat-card"><div class="label">Starting Balance</div><div class="value" id="r-balance"></div></div>
+                <div class="stat-card red"><div class="label">Total Interest Paid</div><div class="value" id="r-interest"></div></div>
+                <div class="stat-card orange"><div class="label">Total Paid</div><div class="value" id="r-total"></div></div>
+            </div>
+            <details class="breakdown">
+                <summary>Monthly schedule (first 24 months)</summary>
+                <table>
+                    <thead><tr><th>Month</th><th>Interest</th><th>Principal</th><th>Balance</th></tr></thead>
+                    <tbody id="r-table"></tbody>
+                </table>
+            </details>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+syncSlider("balance_r","balance","₹","");
+syncSlider("apr_r","apr","","% p.a.");
+syncSlider("monthly_payment_r","monthly_payment","₹","");
+
+async function calculate() {
+    const data = {
+        balance: +document.getElementById("balance").value,
+        apr: +document.getElementById("apr").value,
+        monthly_payment: +document.getElementById("monthly_payment").value,
+    };
+    const res = await postCalc("/finance/api/credit-card-payoff", data);
+    if (res.status !== "success") return alert(res.message);
+    showResults("results");
+    const d = res.data;
+    const yrs = d.years_to_payoff, mos = d.remaining_months;
+    document.getElementById("r-time").textContent = (yrs > 0 ? yrs + "y " : "") + mos + "m";
+    document.getElementById("r-balance").textContent = formatINR(d.starting_balance || data.balance);
+    document.getElementById("r-interest").textContent = formatINR(d.total_interest_paid);
+    document.getElementById("r-total").textContent = formatINR(d.total_paid);
+    document.getElementById("r-table").innerHTML = (d.schedule || []).map(r =>
+        `<tr><td>${r.month}</td><td>${formatINR(r.interest)}</td><td>${formatINR(r.principal)}</td><td>${formatINR(r.balance)}</td></tr>`
+    ).join("");
+}
+</script>
+{% endblock %}

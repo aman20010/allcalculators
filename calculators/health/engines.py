@@ -1,4 +1,5 @@
 import math
+from datetime import datetime, timedelta
 
 
 # ── General Health ──
@@ -462,4 +463,117 @@ def calc_atherogenic_index(triglycerides, hdl):
         "hdl": hdl,
         "tg_hdl_ratio": round(triglycerides / hdl, 2),
         "unit": "mg/dL",
+    }
+
+
+def calc_pregnancy_due_date(lmp_date_str, cycle_length=28):
+    lmp = datetime.strptime(lmp_date_str, "%Y-%m-%d")
+    cycle_adjustment = cycle_length - 28
+    due_date = lmp + timedelta(days=280 + cycle_adjustment)
+    today = datetime.now()
+    days_pregnant = (today - lmp).days
+    weeks_pregnant = max(0, days_pregnant // 7)
+    days_remainder = max(0, days_pregnant % 7)
+    trimester = 1 if weeks_pregnant < 13 else (2 if weeks_pregnant < 27 else 3)
+    days_until_due = (due_date - today).days
+    conception_estimate = lmp + timedelta(days=14 + cycle_adjustment)
+    return {
+        "due_date": due_date.strftime("%Y-%m-%d"),
+        "conception_date_estimate": conception_estimate.strftime("%Y-%m-%d"),
+        "current_week": weeks_pregnant,
+        "current_day_in_week": days_remainder,
+        "trimester": trimester,
+        "days_until_due": days_until_due,
+        "days_pregnant": max(0, days_pregnant),
+    }
+
+
+def calc_ovulation(lmp_date_str, cycle_length=28):
+    lmp = datetime.strptime(lmp_date_str, "%Y-%m-%d")
+    ovulation_date = lmp + timedelta(days=cycle_length - 14)
+    fertile_start = ovulation_date - timedelta(days=5)
+    fertile_end = ovulation_date + timedelta(days=1)
+    next_period = lmp + timedelta(days=cycle_length)
+    return {
+        "ovulation_date": ovulation_date.strftime("%Y-%m-%d"),
+        "fertile_window_start": fertile_start.strftime("%Y-%m-%d"),
+        "fertile_window_end": fertile_end.strftime("%Y-%m-%d"),
+        "next_period_date": next_period.strftime("%Y-%m-%d"),
+        "cycle_length": cycle_length,
+    }
+
+
+def calc_heart_rate_zones(age, resting_hr=None):
+    max_hr = 220 - age
+    if resting_hr:
+        hrr = max_hr - resting_hr
+        raw_zones = [
+            ("Zone 1 — Warm Up", 0.50, 0.60),
+            ("Zone 2 — Fat Burn", 0.60, 0.70),
+            ("Zone 3 — Aerobic", 0.70, 0.80),
+            ("Zone 4 — Anaerobic", 0.80, 0.90),
+            ("Zone 5 — Maximum", 0.90, 1.00),
+        ]
+        zones = [{"name": name, "min": round(resting_hr + hrr * lo), "max": round(resting_hr + hrr * hi)} for name, lo, hi in raw_zones]
+        method = "Karvonen (heart rate reserve)"
+    else:
+        raw_zones = [
+            ("Zone 1 — Warm Up", 0.50, 0.60),
+            ("Zone 2 — Fat Burn", 0.60, 0.70),
+            ("Zone 3 — Aerobic", 0.70, 0.80),
+            ("Zone 4 — Anaerobic", 0.80, 0.90),
+            ("Zone 5 — Maximum", 0.90, 1.00),
+        ]
+        zones = [{"name": name, "min": round(max_hr * lo), "max": round(max_hr * hi)} for name, lo, hi in raw_zones]
+        method = "% of max heart rate"
+    return {
+        "max_heart_rate": max_hr,
+        "resting_heart_rate": resting_hr,
+        "method": method,
+        "zones": zones,
+    }
+
+
+_WHO_BOYS = [(0,3.3,0.40),(1,4.5,0.50),(2,5.6,0.60),(3,6.4,0.65),(6,7.9,0.80),
+             (9,8.9,0.90),(12,9.6,1.00),(18,10.9,1.15),(24,12.2,1.30),(36,14.3,1.50),
+             (48,16.3,1.70),(60,18.3,1.90)]
+_WHO_GIRLS = [(0,3.2,0.40),(1,4.2,0.50),(2,5.1,0.55),(3,5.8,0.60),(6,7.3,0.75),
+              (9,8.2,0.85),(12,8.9,0.95),(18,10.2,1.10),(24,11.5,1.25),(36,13.9,1.50),
+              (48,16.1,1.70),(60,18.2,1.90)]
+
+
+def _interp_who(table, age_months):
+    age_months = max(0, min(60, age_months))
+    for i in range(len(table) - 1):
+        m0, med0, sd0 = table[i]
+        m1, med1, sd1 = table[i + 1]
+        if m0 <= age_months <= m1:
+            frac = (age_months - m0) / (m1 - m0) if m1 != m0 else 0
+            return med0 + frac * (med1 - med0), sd0 + frac * (sd1 - sd0)
+    return table[-1][1], table[-1][2]
+
+
+def calc_child_growth_percentile(age_months, weight_kg, gender="male"):
+    table = _WHO_BOYS if gender == "male" else _WHO_GIRLS
+    median, sd = _interp_who(table, age_months)
+    z = (weight_kg - median) / sd
+    percentile = round(max(0.1, min(99.9, 50 * (1 + math.erf(z / math.sqrt(2))))), 1)
+    if percentile < 5:
+        category = "Below 5th percentile — consult a paediatrician"
+    elif percentile < 25:
+        category = "Below average"
+    elif percentile <= 75:
+        category = "Average (healthy range)"
+    elif percentile <= 95:
+        category = "Above average"
+    else:
+        category = "Above 95th percentile — consult a paediatrician"
+    return {
+        "age_months": age_months,
+        "weight_kg": weight_kg,
+        "gender": gender,
+        "percentile": percentile,
+        "z_score": round(z, 2),
+        "who_median_kg": round(median, 2),
+        "category": category,
     }

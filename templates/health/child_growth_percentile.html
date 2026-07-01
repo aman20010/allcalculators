@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}Child Growth Percentile Calculator — CalcHub{% endblock %}
+{% block content %}
+<div class="breadcrumb">
+    <a href="/">Home</a><span class="sep">/</span><a href="/health">Health</a><span class="sep">/</span><span class="current">Child Growth Percentile</span>
+</div>
+<div class="page-header">
+    <h1>Child Growth Percentile Calculator</h1>
+    <p>Weight-for-age percentile based on WHO Child Growth Standards (0–60 months)</p>
+</div>
+<div class="calc-layout">
+    <div class="calc-form">
+        <h2>Enter Details</h2>
+        <div class="field">
+            <label for="age_months">Child's Age <span class="field-value"></span></label>
+            <input type="number" id="age_months" value="12" min="0" max="60">
+            <input type="range" id="age_months_r" min="0" max="60" step="1" value="12">
+            <div class="hint">In months (0–60)</div>
+        </div>
+        <div class="field">
+            <label for="weight_kg">Weight <span class="field-value"></span></label>
+            <div class="input-wrap"><input type="number" id="weight_kg" value="9.6" min="1" max="30" step="0.1"><span class="suffix">kg</span></div>
+            <input type="range" id="weight_kg_r" min="1" max="25" step="0.1" value="9.6">
+        </div>
+        <div class="field">
+            <label>Gender</label>
+            <div class="toggle-group">
+                <input type="radio" name="gender" id="g_male" value="male" checked>
+                <label for="g_male">Boy</label>
+                <input type="radio" name="gender" id="g_female" value="female">
+                <label for="g_female">Girl</label>
+            </div>
+        </div>
+        <button class="btn btn-primary" onclick="calculate()">Calculate</button>
+    </div>
+    <div class="calc-results">
+        <h2>Results</h2>
+        <div id="results-placeholder" class="results-placeholder">
+            <div class="icon">👶</div>
+            <p>Enter your child's details and click Calculate.</p>
+        </div>
+        <div id="results" style="display:none;">
+            <div class="result-hero">
+                <div class="label">Weight-for-Age Percentile</div>
+                <div class="value" id="r-percentile"></div>
+                <div class="sub" id="r-category"></div>
+            </div>
+            <div class="result-stats">
+                <div class="stat-card"><div class="label">WHO Median (this age)</div><div class="value" id="r-median"></div></div>
+                <div class="stat-card"><div class="label">Z-Score</div><div class="value" id="r-zscore"></div></div>
+            </div>
+            <div class="info-box" style="margin-top:1rem;">
+                Approximate WHO reference — for screening only. Percentiles below 5th or above 95th warrant discussion with a paediatrician. Not a clinical diagnostic tool.
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+syncSlider("age_months_r","age_months","","months");
+syncSlider("weight_kg_r","weight_kg","","kg");
+
+async function calculate() {
+    const data = {
+        age_months: +document.getElementById("age_months").value,
+        weight_kg: +document.getElementById("weight_kg").value,
+        gender: document.getElementById("g_male").checked ? "male" : "female",
+    };
+    const res = await postCalc("/health/api/child-growth-percentile", data);
+    if (res.status !== "success") return alert(res.message);
+    showResults("results");
+    const d = res.data;
+    document.getElementById("r-percentile").textContent = d.percentile + "th";
+    document.getElementById("r-category").textContent = d.category;
+    document.getElementById("r-median").textContent = d.who_median_kg + " kg";
+    document.getElementById("r-zscore").textContent = d.z_score;
+}
+</script>
+{% endblock %}

@@ -4,6 +4,8 @@ from .engines import (
     calc_egfr, calc_ldl_friedewald, calc_homa_ir, calc_hba1c_to_glucose,
     calc_corrected_calcium, calc_atherogenic_index,
     calc_ffmi, calc_lean_body_mass, calc_protein_intake, calc_ideal_body_weight,
+    calc_pregnancy_due_date, calc_ovulation,
+    calc_heart_rate_zones, calc_child_growth_percentile,
 )
 
 health_bp = Blueprint("health", __name__, url_prefix="/health")
@@ -81,6 +83,22 @@ def protein_intake_page():
 @health_bp.route("/ideal-body-weight")
 def ideal_body_weight_page():
     return render_template("health/ideal_body_weight.html")
+
+@health_bp.route("/pregnancy-due-date")
+def pregnancy_due_date_page():
+    return render_template("health/pregnancy_due_date.html")
+
+@health_bp.route("/ovulation-calculator")
+def ovulation_page():
+    return render_template("health/ovulation.html")
+
+@health_bp.route("/heart-rate-zones")
+def heart_rate_zones_page():
+    return render_template("health/heart_rate_zones.html")
+
+@health_bp.route("/child-growth-percentile")
+def child_growth_percentile_page():
+    return render_template("health/child_growth_percentile.html")
 
 
 # ── API routes ──
@@ -275,6 +293,60 @@ def api_ideal_body_weight():
     try:
         result = calc_ideal_body_weight(
             height_cm=_get_float(data, "height_cm"),
+            gender=_get_str(data, "gender", "male"),
+        )
+        return jsonify({"status": "success", "data": result})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 400
+
+
+@health_bp.route("/api/pregnancy-due-date", methods=["POST"])
+def api_pregnancy_due_date():
+    data = request.get_json()
+    try:
+        result = calc_pregnancy_due_date(
+            lmp_date_str=data.get("lmp_date"),
+            cycle_length=int(data.get("cycle_length", 28)),
+        )
+        return jsonify({"status": "success", "data": result})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 400
+
+
+@health_bp.route("/api/ovulation", methods=["POST"])
+def api_ovulation():
+    data = request.get_json()
+    try:
+        result = calc_ovulation(
+            lmp_date_str=data.get("lmp_date"),
+            cycle_length=int(data.get("cycle_length", 28)),
+        )
+        return jsonify({"status": "success", "data": result})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 400
+
+
+@health_bp.route("/api/heart-rate-zones", methods=["POST"])
+def api_heart_rate_zones():
+    data = request.get_json()
+    try:
+        resting_hr = data.get("resting_hr")
+        result = calc_heart_rate_zones(
+            age=int(data.get("age", 30)),
+            resting_hr=int(resting_hr) if resting_hr else None,
+        )
+        return jsonify({"status": "success", "data": result})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 400
+
+
+@health_bp.route("/api/child-growth-percentile", methods=["POST"])
+def api_child_growth_percentile():
+    data = request.get_json()
+    try:
+        result = calc_child_growth_percentile(
+            age_months=int(data.get("age_months", 12)),
+            weight_kg=_get_float(data, "weight_kg"),
             gender=_get_str(data, "gender", "male"),
         )
         return jsonify({"status": "success", "data": result})

@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% block title %}Income Tax Calculator FY 2025-26 — CalcHub{% endblock %}
+{% block content %}
+<div class="breadcrumb">
+    <a href="/">Home</a><span class="sep">/</span><a href="/finance">Finance</a><span class="sep">/</span><span class="current">Income Tax Calculator</span>
+</div>
+<div class="page-header">
+    <h1>Income Tax Calculator</h1>
+    <p>Old vs New Tax Regime comparison — FY 2025-26 (AY 2026-27)</p>
+</div>
+<div class="calc-layout">
+    <div class="calc-form">
+        <h2>Your Income Details</h2>
+        <div class="field">
+            <label for="annual_income">Annual Income (Gross) <span class="field-value"></span></label>
+            <div class="input-wrap"><span class="prefix">₹</span><input type="number" id="annual_income" class="has-prefix" value="1200000" min="0"></div>
+            <input type="range" id="annual_income_r" min="300000" max="5000000" step="50000" value="1200000">
+        </div>
+        <div class="field">
+            <label for="deductions_80c">80C Deductions (PF, ELSS, LIC…) <span class="field-value"></span></label>
+            <div class="input-wrap"><span class="prefix">₹</span><input type="number" id="deductions_80c" class="has-prefix" value="150000" min="0" max="150000"></div>
+            <input type="range" id="deductions_80c_r" min="0" max="150000" step="5000" value="150000">
+        </div>
+        <div class="field">
+            <label for="hra_exemption">HRA Exemption (if applicable) <span class="field-value"></span></label>
+            <div class="input-wrap"><span class="prefix">₹</span><input type="number" id="hra_exemption" class="has-prefix" value="0" min="0"></div>
+        </div>
+        <div class="field">
+            <label for="other_deductions">Other Deductions (80D, NPS, LTA…) <span class="field-value"></span></label>
+            <div class="input-wrap"><span class="prefix">₹</span><input type="number" id="other_deductions" class="has-prefix" value="0" min="0"></div>
+        </div>
+        <div class="field">
+            <label>Age Group</label>
+            <select id="age_group">
+                <option value="below60">Below 60</option>
+                <option value="60to80">Senior Citizen (60–80)</option>
+                <option value="above80">Super Senior (80+)</option>
+            </select>
+        </div>
+        <button class="btn btn-primary" onclick="calculate()">Calculate Tax</button>
+    </div>
+    <div class="calc-results">
+        <h2>Results</h2>
+        <div id="results-placeholder" class="results-placeholder">
+            <div class="icon">🧾</div>
+            <p>Enter your income details and click Calculate.</p>
+        </div>
+        <div id="results" style="display:none;">
+            <div class="result-hero" id="hero-box">
+                <div class="label" id="r-regime-label"></div>
+                <div class="value" id="r-best-tax"></div>
+                <div class="sub" id="r-savings-sub"></div>
+            </div>
+            <div class="result-stats">
+                <div class="stat-card"><div class="label">Old Regime Tax</div><div class="value" id="r-old-tax"></div><div class="sub" id="r-old-eff"></div></div>
+                <div class="stat-card"><div class="label">New Regime Tax</div><div class="value" id="r-new-tax"></div><div class="sub" id="r-new-eff"></div></div>
+            </div>
+            <div class="section-label" style="margin-top:.75rem;">Old Regime</div>
+            <div class="result-stats">
+                <div class="stat-card"><div class="label">Taxable Income</div><div class="value" id="r-old-taxable"></div></div>
+                <div class="stat-card"><div class="label">Monthly Tax</div><div class="value" id="r-old-monthly"></div></div>
+                <div class="stat-card"><div class="label">In-Hand (Annual)</div><div class="value" id="r-old-inhand"></div></div>
+            </div>
+            <div class="section-label" style="margin-top:.75rem;">New Regime</div>
+            <div class="result-stats">
+                <div class="stat-card"><div class="label">Taxable Income</div><div class="value" id="r-new-taxable"></div></div>
+                <div class="stat-card"><div class="label">Monthly Tax</div><div class="value" id="r-new-monthly"></div></div>
+                <div class="stat-card"><div class="label">In-Hand (Annual)</div><div class="value" id="r-new-inhand"></div></div>
+            </div>
+            <div class="info-box" style="margin-top:1rem;">
+                Standard deduction of ₹50,000 (old) / ₹75,000 (new) applied automatically for salaried individuals. Rebate u/s 87A: zero tax up to ₹5L (old) and ₹12L (new) taxable income. Includes 4% cess. Indicative estimate only.
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+syncSlider("annual_income_r","annual_income","₹","");
+syncSlider("deductions_80c_r","deductions_80c","₹","");
+
+async function calculate() {
+    const data = {
+        annual_income: +document.getElementById("annual_income").value,
+        deductions_80c: +document.getElementById("deductions_80c").value,
+        hra_exemption: +document.getElementById("hra_exemption").value,
+        other_deductions: +document.getElementById("other_deductions").value,
+        age_group: document.getElementById("age_group").value,
+        standard_deduction: true,
+    };
+    const res = await postCalc("/finance/api/income-tax", data);
+    if (res.status !== "success") return alert(res.message);
+    showResults("results");
+    const d = res.data;
+    const rec = d.recommended_regime;
+    document.getElementById("r-regime-label").textContent = rec === "new" ? "Recommended: New Regime" : "Recommended: Old Regime";
+    document.getElementById("r-best-tax").textContent = formatINR(rec === "new" ? d.new_regime.total_tax : d.old_regime.total_tax);
+    document.getElementById("r-savings-sub").textContent = "Save " + formatINR(d.tax_savings) + " vs the other regime";
+    document.getElementById("r-old-tax").textContent = formatINR(d.old_regime.total_tax);
+    document.getElementById("r-old-eff").textContent = d.old_regime.effective_rate + "% effective";
+    document.getElementById("r-new-tax").textContent = formatINR(d.new_regime.total_tax);
+    document.getElementById("r-new-eff").textContent = d.new_regime.effective_rate + "% effective";
+    document.getElementById("r-old-taxable").textContent = formatINR(d.old_regime.taxable_income);
+    document.getElementById("r-old-monthly").textContent = formatINR(d.old_regime.monthly_tax);
+    document.getElementById("r-old-inhand").textContent = formatINR(d.in_hand_old);
+    document.getElementById("r-new-taxable").textContent = formatINR(d.new_regime.taxable_income);
+    document.getElementById("r-new-monthly").textContent = formatINR(d.new_regime.monthly_tax);
+    document.getElementById("r-new-inhand").textContent = formatINR(d.in_hand_new);
+}
+</script>
+{% endblock %}

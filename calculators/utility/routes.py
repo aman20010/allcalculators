@@ -180,3 +180,21 @@ def pace():
 @utility_bp.route("/sleep")
 def sleep():
     return render_template("utility/everyday/sleep.html")
+
+
+# ── New tools ──
+@utility_bp.route("/gpa-calculator")
+def gpa_calculator():
+    return render_template("utility/everyday/gpa.html")
+
+@utility_bp.route("/aspect-ratio")
+def aspect_ratio():
+    return render_template("utility/everyday/aspect_ratio.html")
+
+@utility_bp.route("/password-generator")
+def password_generator():
+    return render_template("utility/everyday/password_generator.html")
+
+@utility_bp.route("/word-counter")
+def word_counter():
+    return render_template("utility/everyday/word_counter.html")

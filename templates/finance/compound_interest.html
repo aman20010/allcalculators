@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% block title %}Compound Interest Calculator — CalcHub{% endblock %}
+{% block head %}<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>{% endblock %}
+{% block content %}
+<div class="breadcrumb">
+    <a href="/">Home</a><span class="sep">/</span><a href="/finance">Finance</a><span class="sep">/</span><span class="current">Compound Interest</span>
+</div>
+<div class="page-header">
+    <h1>Compound Interest Calculator</h1>
+    <p>See how your money grows with compounding — with optional monthly additions</p>
+</div>
+<div class="calc-layout">
+    <div class="calc-form">
+        <h2>Enter Details</h2>
+        <div class="field">
+            <label for="principal">Principal Amount <span class="field-value"></span></label>
+            <div class="input-wrap"><span class="prefix">₹</span><input type="number" id="principal" class="has-prefix" value="100000" min="1"></div>
+            <input type="range" id="principal_r" min="10000" max="10000000" step="10000" value="100000">
+        </div>
+        <div class="field">
+            <label for="annual_rate">Annual Interest Rate <span class="field-value"></span></label>
+            <div class="input-wrap"><input type="number" id="annual_rate" value="10" min="0.1" max="50" step="0.5"><span class="suffix">% p.a.</span></div>
+            <input type="range" id="annual_rate_r" min="1" max="30" step="0.5" value="10">
+        </div>
+        <div class="field">
+            <label for="time_years">Time Period <span class="field-value"></span></label>
+            <input type="number" id="time_years" value="10" min="1" max="50">
+            <input type="range" id="time_years_r" min="1" max="50" step="1" value="10">
+            <div class="hint">In years</div>
+        </div>
+        <div class="field">
+            <label for="compounding_frequency">Compounding Frequency</label>
+            <select id="compounding_frequency">
+                <option value="1">Annually</option>
+                <option value="2">Semi-annually</option>
+                <option value="4">Quarterly</option>
+                <option value="12" selected>Monthly</option>
+                <option value="365">Daily</option>
+            </select>
+        </div>
+        <div class="field">
+            <label for="monthly_addition">Monthly Addition (optional) <span class="field-value"></span></label>
+            <div class="input-wrap"><span class="prefix">₹</span><input type="number" id="monthly_addition" class="has-prefix" value="0" min="0"></div>
+        </div>
+        <button class="btn btn-primary" onclick="calculate()">Calculate</button>
+    </div>
+    <div class="calc-results">
+        <h2>Results</h2>
+        <div id="results-placeholder" class="results-placeholder">
+            <div class="icon">📈</div>
+            <p>Enter details and click Calculate.</p>
+        </div>
+        <div id="results" style="display:none;">
+            <div class="result-hero">
+                <div class="label">Maturity Amount</div>
+                <div class="value" id="r-maturity"></div>
+            </div>
+            <div class="result-stats">
+                <div class="stat-card"><div class="label">Total Invested</div><div class="value" id="r-invested"></div></div>
+                <div class="stat-card green"><div class="label">Interest Earned</div><div class="value" id="r-interest"></div></div>
+            </div>
+            <div class="chart-container"><canvas id="chart"></canvas></div>
+            <details class="breakdown">
+                <summary>Year-by-year growth</summary>
+                <table>
+                    <thead><tr><th>Year</th><th>Invested</th><th>Interest</th><th>Value</th></tr></thead>
+                    <tbody id="r-table"></tbody>
+                </table>
+            </details>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+let chart;
+syncSlider("principal_r","principal","₹","");
+syncSlider("annual_rate_r","annual_rate","","% p.a.");
+syncSlider("time_years_r","time_years","","yrs");
+
+async function calculate() {
+    const data = {
+        principal: +document.getElementById("principal").value,
+        annual_rate: +document.getElementById("annual_rate").value,
+        time_years: +document.getElementById("time_years").value,
+        compounding_frequency: +document.getElementById("compounding_frequency").value,
+        monthly_addition: +document.getElementById("monthly_addition").value,
+    };
+    const res = await postCalc("/finance/api/compound-interest", data);
+    if (res.status !== "success") return alert(res.message);
+    showResults("results");
+    const d = res.data;
+    document.getElementById("r-maturity").textContent = formatLakhsCr(d.maturity_amount);
+    document.getElementById("r-invested").textContent = formatLakhsCr(d.total_invested);
+    document.getElementById("r-interest").textContent = formatLakhsCr(d.interest_earned);
+    document.getElementById("r-table").innerHTML = d.yearly_breakdown.map(r =>
+        `<tr><td>${r.year}</td><td>${formatINR(r.invested)}</td><td>${formatINR(r.interest)}</td><td>${formatINR(r.value)}</td></tr>`
+    ).join("");
+    if (chart) chart.destroy();
+    chart = new Chart(document.getElementById("chart"), {
+        type: "doughnut",
+        data: { labels: ["Invested","Interest"], datasets: [{ data:[d.total_invested, d.interest_earned], backgroundColor:["#4f46e5","#10b981"], borderWidth:0, borderRadius:4 }] },
+        options: { responsive:true, cutout:"65%", plugins:{ legend:{ position:"bottom", labels:{ padding:10, usePointStyle:true, pointStyle:"circle", font:{size:11,family:"Inter"} } } } }
+    });
+}
+</script>
+{% endblock %}

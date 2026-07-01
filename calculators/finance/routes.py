@@ -4,6 +4,9 @@ from .engines import (
     calc_gratuity, calc_emi, calc_ppf, calc_fd, calc_lumpsum,
     calc_retirement, adjust_for_inflation,
     calc_retirement_readiness, calc_inflation_corpus,
+    calc_income_tax, calc_hra_exemption, calc_take_home_salary,
+    calc_gst, calc_nps, calc_credit_card_payoff, calc_debt_snowball,
+    calc_compound_interest, calc_rd,
 )
 
 finance_bp = Blueprint("finance", __name__, url_prefix="/finance")
@@ -87,6 +90,50 @@ def retirement_readiness_page():
 @finance_bp.route("/inflation-corpus")
 def inflation_corpus_page():
     return render_template("finance/inflation_corpus.html")
+
+@finance_bp.route("/income-tax")
+def income_tax_page():
+    return render_template("finance/income_tax.html")
+
+@finance_bp.route("/hra")
+def hra_page():
+    return render_template("finance/hra.html")
+
+@finance_bp.route("/take-home-salary")
+def take_home_salary_page():
+    return render_template("finance/take_home_salary.html")
+
+@finance_bp.route("/gst")
+def gst_page():
+    return render_template("finance/gst.html")
+
+@finance_bp.route("/nps")
+def nps_page():
+    return render_template("finance/nps.html")
+
+@finance_bp.route("/credit-card-payoff")
+def credit_card_payoff_page():
+    return render_template("finance/credit_card_payoff.html")
+
+@finance_bp.route("/debt-snowball")
+def debt_snowball_page():
+    return render_template("finance/debt_snowball.html")
+
+@finance_bp.route("/compound-interest")
+def compound_interest_page():
+    return render_template("finance/compound_interest.html")
+
+@finance_bp.route("/rd")
+def rd_page():
+    return render_template("finance/rd.html")
+
+@finance_bp.route("/mortgage-calculator")
+def mortgage_page():
+    return render_template("finance/mortgage.html")
+
+@finance_bp.route("/car-loan-calculator")
+def car_loan_page():
+    return render_template("finance/car_loan.html")
 
 
 # ── API routes ──
@@ -281,6 +328,179 @@ def api_inflation_corpus():
             corpus=_get_float(data, "corpus"),
             years=int(data.get("years", 20)),
             inflation_rate=_get_float(data, "inflation_rate", 6.0),
+        )
+        return jsonify({"status": "success", "data": result})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 400
+
+
+@finance_bp.route("/api/income-tax", methods=["POST"])
+def api_income_tax():
+    data = request.get_json()
+    try:
+        result = calc_income_tax(
+            annual_income=_get_float(data, "annual_income"),
+            deductions_80c=_get_float(data, "deductions_80c", 0),
+            hra_exemption=_get_float(data, "hra_exemption", 0),
+            other_deductions=_get_float(data, "other_deductions", 0),
+            age_group=data.get("age_group", "below60"),
+            standard_deduction=_get_bool(data, "standard_deduction", True),
+        )
+        return jsonify({"status": "success", "data": result})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 400
+
+
+@finance_bp.route("/api/hra", methods=["POST"])
+def api_hra():
+    data = request.get_json()
+    try:
+        result = calc_hra_exemption(
+            basic_salary=_get_float(data, "basic_salary"),
+            hra_received=_get_float(data, "hra_received"),
+            rent_paid=_get_float(data, "rent_paid"),
+            da=_get_float(data, "da", 0),
+            is_metro=_get_bool(data, "is_metro", True),
+        )
+        return jsonify({"status": "success", "data": result})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 400
+
+
+@finance_bp.route("/api/take-home-salary", methods=["POST"])
+def api_take_home_salary():
+    data = request.get_json()
+    try:
+        result = calc_take_home_salary(
+            ctc=_get_float(data, "ctc"),
+            bonus=_get_float(data, "bonus", 0),
+            basic_percent=_get_float(data, "basic_percent", 50),
+            employer_pf_percent=_get_float(data, "employer_pf_percent", 12),
+            employee_pf_percent=_get_float(data, "employee_pf_percent", 12),
+            professional_tax=_get_float(data, "professional_tax", 2400),
+            regime=data.get("regime", "new"),
+            other_deductions=_get_float(data, "other_deductions", 0),
+        )
+        return jsonify({"status": "success", "data": result})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 400
+
+
+@finance_bp.route("/api/gst", methods=["POST"])
+def api_gst():
+    data = request.get_json()
+    try:
+        result = calc_gst(
+            amount=_get_float(data, "amount"),
+            gst_rate=_get_float(data, "gst_rate", 18),
+            calculation_type=data.get("calculation_type", "exclusive"),
+        )
+        return jsonify({"status": "success", "data": result})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 400
+
+
+@finance_bp.route("/api/nps", methods=["POST"])
+def api_nps():
+    data = request.get_json()
+    try:
+        result = calc_nps(
+            monthly_contribution=_get_float(data, "monthly_contribution"),
+            current_age=int(data.get("current_age", 30)),
+            retirement_age=int(data.get("retirement_age", 60)),
+            expected_return_rate=_get_float(data, "expected_return_rate", 10),
+            annuity_percent=_get_float(data, "annuity_percent", 40),
+            annuity_rate=_get_float(data, "annuity_rate", 6),
+        )
+        return jsonify({"status": "success", "data": result})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 400
+
+
+@finance_bp.route("/api/credit-card-payoff", methods=["POST"])
+def api_credit_card_payoff():
+    data = request.get_json()
+    try:
+        result = calc_credit_card_payoff(
+            balance=_get_float(data, "balance"),
+            apr=_get_float(data, "apr", 36),
+            monthly_payment=_get_float(data, "monthly_payment"),
+        )
+        if "error" in result:
+            return jsonify({"status": "error", "message": result["error"]}), 400
+        return jsonify({"status": "success", "data": result})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 400
+
+
+@finance_bp.route("/api/debt-snowball", methods=["POST"])
+def api_debt_snowball():
+    data = request.get_json()
+    try:
+        debts = data.get("debts", [])
+        result = calc_debt_snowball(
+            debts=debts,
+            extra_payment=_get_float(data, "extra_payment", 0),
+        )
+        if "error" in result:
+            return jsonify({"status": "error", "message": result["error"]}), 400
+        return jsonify({"status": "success", "data": result})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 400
+
+
+@finance_bp.route("/api/compound-interest", methods=["POST"])
+def api_compound_interest():
+    data = request.get_json()
+    try:
+        result = calc_compound_interest(
+            principal=_get_float(data, "principal"),
+            annual_rate=_get_float(data, "annual_rate", 10),
+            time_years=_get_float(data, "time_years", 10),
+            compounding_frequency=int(data.get("compounding_frequency", 12)),
+            monthly_addition=_get_float(data, "monthly_addition", 0),
+        )
+        return jsonify({"status": "success", "data": result})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 400
+
+
+@finance_bp.route("/api/rd", methods=["POST"])
+def api_rd():
+    data = request.get_json()
+    try:
+        result = calc_rd(
+            monthly_deposit=_get_float(data, "monthly_deposit"),
+            interest_rate=_get_float(data, "interest_rate", 7),
+            tenure_months=int(data.get("tenure_months", 24)),
+        )
+        return jsonify({"status": "success", "data": result})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 400
+
+
+@finance_bp.route("/api/mortgage", methods=["POST"])
+def api_mortgage():
+    data = request.get_json()
+    try:
+        result = calc_emi(
+            principal=_get_float(data, "principal"),
+            interest_rate=_get_float(data, "interest_rate", 8.5),
+            tenure_months=int(data.get("tenure_months", 240)),
+        )
+        return jsonify({"status": "success", "data": result})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 400
+
+
+@finance_bp.route("/api/car-loan", methods=["POST"])
+def api_car_loan():
+    data = request.get_json()
+    try:
+        result = calc_emi(
+            principal=_get_float(data, "principal"),
+            interest_rate=_get_float(data, "interest_rate", 9.0),
+            tenure_months=int(data.get("tenure_months", 60)),
         )
         return jsonify({"status": "success", "data": result})
     except Exception as e:
